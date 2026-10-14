@@ -1,0 +1,87 @@
+{
+  "id": "/",
+  "name": "StrikePoint Options Terminal",
+  "short_name": "StrikePoint",
+  "description": "Institutional options trading terminal, multi-leg strategy builder, Black-Scholes Greeks engine, and risk analytics platform across Linux, Windows, macOS, Android, and iOS.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0b0e14",
+  "background_color": "#0b0e14",
+  "categories": ["finance", "business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Options Chain (OMON)",
+      "short_name": "OMON",
+      "description": "Real-time options chains, Greeks, and order execution",
+      "url": "/?screen=omon",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Portfolio & Blotters",
+      "short_name": "PORT",
+      "description": "Live positions, execution blotters, and margin health",
+      "url": "/?screen=port",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dividend Tracker (DVD)",
+      "short_name": "DVD",
+      "description": "Dividend income forecasts, cash flow waterfall, and DRIP simulator",
+      "url": "/?screen=div",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Risk Payoff Profile",
+      "short_name": "RISK",
+      "description": "Bigger picture risk matrix and stress testing",
+      "url": "/?screen=risk",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "StrikePoint Options Terminal",
+  "description": "Institutional-grade options trading terminal with real-time options chains, multi-leg strategy builder, Black-Scholes Greeks engine, interactive payoff diagrams, and paper trading portfolio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
