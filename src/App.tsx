@@ -130,6 +130,8 @@ import {
   FileText,
   Building2,
   Type,
+  Folder,
+  BarChart2,
 } from 'lucide-react';
 import {
   loadPrivacySettings,
@@ -212,6 +214,8 @@ export default function App() {
     } catch {}
     return false; // Hidden by default when not in use to make screen bigger!
   });
+
+  const [sidebarActiveTab, setSidebarActiveTab] = useState<'watchlist' | 'strategies' | 'analysis' | 'earnings'>('watchlist');
 
   const [isCountryRiskOpen, setIsCountryRiskOpen] = useState<boolean>(false);
   const [isStockTradeOpen, setIsStockTradeOpen] = useState<boolean>(false);
@@ -1979,161 +1983,67 @@ export default function App() {
     <div className="tos-app-shell">
       {/* Top Utility Bar */}
       <div className="system-nav">
-        <div className="f-keys">
-          <button onClick={() => setIsHelpOpen(true)} className="hover:opacity-80">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#101522] border border-[#222d44]">
+            <img src="/icon.svg" alt="StrikePoint" className="w-3.5 h-3.5 object-contain" />
+            <span className="font-mono font-black text-[10px] text-[#ff9900] tracking-wider">STRIKEPOINT</span>
+          </div>
+          <button onClick={() => setIsHelpOpen(true)} className="hover:text-white text-[#94a3b8] flex items-center gap-1 text-[10px] cursor-pointer">
             <span className="f-key">F1</span> HELP
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('omon')} className={`hover:opacity-80 ${currentScreen === 'omon' ? 'text-white font-bold' : ''}`}>
+        </div>
+
+        <div className="f-keys hidden md:flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <button onClick={() => setCurrentScreen('omon')} className={`hover:opacity-80 transition-colors ${currentScreen === 'omon' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F2</span> OMON
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('ovme')} className={`hover:opacity-80 ${currentScreen === 'ovme' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('ovme')} className={`hover:opacity-80 transition-colors ${currentScreen === 'ovme' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F3</span> OVME
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('risk')} className={`hover:opacity-80 ${currentScreen === 'risk' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('risk')} className={`hover:opacity-80 transition-colors ${currentScreen === 'risk' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F4</span> RISK
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('cone')} className={`hover:opacity-80 ${currentScreen === 'cone' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('cone')} className={`hover:opacity-80 transition-colors ${currentScreen === 'cone' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F5</span> CONE
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('scen')} className={`hover:opacity-80 ${currentScreen === 'scen' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('scen')} className={`hover:opacity-80 transition-colors ${currentScreen === 'scen' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F6</span> SCEN
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('flow')} className={`hover:opacity-80 ${currentScreen === 'flow' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('flow')} className={`hover:opacity-80 transition-colors ${currentScreen === 'flow' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F7</span> FLOW
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('vols')} className={`hover:opacity-80 ${currentScreen === 'vols' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('vols')} className={`hover:opacity-80 transition-colors ${currentScreen === 'vols' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F8</span> VOLS
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('hivg')} className={`hover:opacity-80 ${currentScreen === 'hivg' ? 'text-white font-bold' : ''}`}>
-            <span className="f-key">F9</span> HIVG
-          </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('chart')} className={`hover:opacity-80 ${currentScreen === 'chart' ? 'text-white font-bold' : ''}`}>
+          <button onClick={() => setCurrentScreen('chart')} className={`hover:opacity-80 transition-colors ${currentScreen === 'chart' ? 'text-white font-bold' : ''}`}>
             <span className="f-key">F10</span> CHART
           </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMonitorSubTab('portfolio');
-              setCurrentScreen('monitor');
-            }}
-            className={`hover:opacity-80 ${(currentScreen === 'monitor' && monitorSubTab === 'portfolio') ? 'text-[#00e676] font-bold' : ''}`}
-            title="Portfolio Blotter & Greeks under Monitor Hub"
-          >
-            <span className="f-key text-[#00e676]">F11</span> PORT
-          </button>
-          &nbsp;
           <button
             onClick={() => {
               playKeyClick();
               setMonitorSubTab('positions');
               setCurrentScreen('monitor');
             }}
-            className={`hover:opacity-80 ${(currentScreen === 'monitor' && monitorSubTab === 'positions') ? 'text-[#38bdf8] font-bold' : ''}`}
-            title="Account Positions & Blotter under Monitor Hub"
+            className={`hover:opacity-80 transition-colors ${currentScreen === 'monitor' ? 'text-[#38bdf8] font-bold' : ''}`}
+            title="Positions, Portfolio & Margin Monitor"
           >
             <span className="f-key text-[#38bdf8]">MON</span> MONITOR {account.positions.length > 0 ? `(${account.positions.length})` : ''}
           </button>
-          &nbsp;
-          <button onClick={() => setCurrentScreen('pcr')} className={`hover:opacity-80 ${currentScreen === 'pcr' ? 'text-white font-bold' : ''}`}>
-            <span className="f-key">F12</span> PCR
-          </button>
-          &nbsp;
           <button
             onClick={() => {
               playKeyClick();
-              setMacroSubTab('opec');
               setCurrentScreen('macro');
             }}
-            className={`hover:opacity-80 ${(currentScreen === 'macro' && macroSubTab === 'opec') ? 'text-[#ff9900] font-bold' : ''}`}
-            title="OPEC & Energy IV under Global Macro Hub"
+            className={`hover:opacity-80 transition-colors ${currentScreen === 'macro' ? 'text-[#00e676] font-bold' : ''}`}
+            title="Global Macro Hub (Economies, Yield Curves, Tariffs, DEFCON, OPEC, Geo Risk)"
           >
-            <span className="f-key text-[#ff9900]">OPEC</span> &amp; IV
-          </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMacroSubTab('tariff');
-              setCurrentScreen('macro');
-            }}
-            className={`hover:opacity-80 ${(currentScreen === 'macro' && macroSubTab === 'tariff') ? 'text-[#ff9900] font-bold' : ''}`}
-            title="Open Global Tariff & Trade War Protectionism Monitor under Global Macro Hub"
-          >
-            <span className="f-key text-[#ff9900]">TRFF</span> TARIFF
-          </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMacroSubTab('geopolitical');
-              setCurrentScreen('macro');
-            }}
-            className={`hover:opacity-80 ${(currentScreen === 'macro' && macroSubTab === 'geopolitical') ? 'text-[#ef4444] font-bold' : 'text-[#ef4444]'}`}
-            title="Open Country & Geo-Political Risk Heatmap under Global Macro Hub"
-          >
-            <span className="f-key text-[#ef4444]">GEO</span> RISK
-          </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMacroSubTab('defcon');
-              setCurrentScreen('macro');
-            }}
-            className={`hover:opacity-80 ${(currentScreen === 'macro' && macroSubTab === 'defcon') ? 'text-[#ffd600] font-bold' : ''}`}
-            title="defconlevel.com OSINT & US Military Alert Threat System under Global Macro Hub"
-          >
-            <span className="f-key text-[#ffd600]">DEFCON</span> 3
-          </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMonitorSubTab('tfsa_rrsp');
-              setCurrentScreen('monitor');
-            }}
-            className={`hover:opacity-80 ${(currentScreen === 'monitor' && monitorSubTab === 'tfsa_rrsp') ? 'text-[#00d2ff] font-bold' : 'text-[#00d2ff]'}`}
-            title="Canadian Accounts & CRA Tax Suite (TFSA, RRSP, FHSA, RESP, Norbert's Gambit) under Monitor Hub"
-          >
-            <span className="f-key text-[#00d2ff]">🇨🇦 TFSA</span> / RRSP
-          </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setIsGitHubOpen(true);
-            }}
-            className="hover:opacity-80 text-[#00e676] font-bold"
-            title="Open GitHub Repository Synchronization & Export Terminal"
-          >
-            <span className="f-key text-[#00e676]">GIT</span> GITHUB
-          </button>
-          &nbsp;
-          <button
-            onClick={() => {
-              playKeyClick();
-              setCurrentScreen('vega');
-            }}
-            className={`hover:opacity-80 ${currentScreen === 'vega' ? 'text-[#00e5ff] font-bold' : ''}`}
-            title="Open Institutional Vega Term Structure & Constant Maturity Analysis"
-          >
-            <span className="f-key text-[#00e5ff]">VEGA</span> VTS
+            <span className="f-key text-[#00e676]">MACR</span> MACRO
           </button>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Quick Screen Zoom Controls */}
-          <div className="flex items-center gap-1 bg-[#141b28] px-1.5 py-0.5 rounded border border-[#222d44] text-[10px] select-none">
+        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          {/* Zoom Stepper */}
+          <div className="flex items-center bg-[#141b28] px-1 py-0.5 rounded border border-[#222d44] text-[10px] select-none">
             <button
               onClick={() => handleStepZoom(-0.05)}
               className="px-1 text-[#8b9bb4] hover:text-white font-mono font-bold cursor-pointer"
@@ -2146,8 +2056,8 @@ export default function App() {
                 playKeyClick();
                 setIsDisplaySettingsOpen(true);
               }}
-              className="text-[#ff9900] font-mono font-black hover:underline px-1 cursor-pointer"
-              title="Click to customize screen scale & fit device"
+              className="text-[#ff9900] font-mono font-black px-1 cursor-pointer hover:underline"
+              title="Display scale settings"
             >
               {Math.round(scale * 100)}%
             </button>
@@ -2160,138 +2070,79 @@ export default function App() {
             </button>
           </div>
 
-          {/* Quick Text Size / Legibility Cycler with Auto-Fit */}
+          {/* Text Size Cycler */}
           <button
             onClick={handleCycleTextLegibility}
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-bold transition-all cursor-pointer ${
+            className={`px-1.5 py-0.5 rounded border text-[10px] font-bold transition-all cursor-pointer ${
               textLegibility === 'xlarge'
                 ? 'bg-[#ffd600]/20 text-[#ffd600] border-[#ffd600]/50'
                 : textLegibility === 'large'
                 ? 'bg-[#00d2ff]/20 text-[#00d2ff] border-[#00d2ff]/50'
                 : 'bg-[#141b28] text-[#cbd5e1] hover:text-white border-[#222d44]'
             }`}
-            title={`Current Text Size: ${
-              textLegibility === 'xlarge' ? 'Maximum Legibility (+30%)' : textLegibility === 'large' ? 'Enlarged Text (+15%)' : 'Standard Text (100%)'
-            }. Click to cycle text size & fit everything on screen.`}
+            title="Cycle Text Legibility (STD / LRG / XL)"
           >
-            <Type className="w-2.5 h-2.5" />
-            <span>
-              {textLegibility === 'xlarge' ? 'TEXT: XL' : textLegibility === 'large' ? 'TEXT: LRG' : 'TEXT: STD'}
-            </span>
+            <span className="font-mono">{textLegibility === 'xlarge' ? 'TXT:XL' : textLegibility === 'large' ? 'TXT:LG' : 'TXT:STD'}</span>
           </button>
 
-          {/* Quick Fit to Screen Button with Auto-Fit Sticky Toggle */}
-          <div className="flex items-center bg-[#141b28] rounded border border-[#222d44] overflow-hidden">
-            <button
-              onClick={() => {
-                playExecutionChime();
-                handleFitToScreen();
-              }}
-              className="flex items-center gap-1 px-1.5 py-0.5 bg-[#00d2ff]/10 hover:bg-[#00d2ff]/20 text-[#00d2ff] text-[10px] font-bold transition-all cursor-pointer"
-              title="Fit everything on screen across all text sizes and display resolutions"
-            >
-              <Sparkles className="w-2.5 h-2.5 text-[#00d2ff]" />
-              <span>FIT SCREEN</span>
-            </button>
-            <button
-              onClick={handleToggleAutoFit}
-              className={`px-1.5 py-0.5 text-[9px] font-mono font-bold transition-all border-l border-[#222d44] cursor-pointer ${
-                isAutoFitActive
-                  ? 'bg-[#00e676]/20 text-[#00e676]'
-                  : 'text-[#64748b] hover:text-[#94a3b8]'
-              }`}
-              title="Toggle persistent Auto-Fit on window resize & text size changes"
-            >
-              {isAutoFitActive ? 'AUTO●' : 'AUTO○'}
-            </button>
-          </div>
-
-          {/* Scale & Display Settings Modal Button */}
+          {/* 1-Click Fit */}
           <button
             onClick={() => {
-              playKeyClick();
-              setIsDisplaySettingsOpen(true);
+              playExecutionChime();
+              handleFitToScreen();
             }}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 text-[#38bdf8] border border-[#38bdf8]/40 text-[10px] font-bold transition-all cursor-pointer"
-            title="Open Display Scaling, Font Sizes & Device Settings"
+            className="px-1.5 py-0.5 rounded bg-[#00d2ff]/10 hover:bg-[#00d2ff]/20 text-[#00d2ff] border border-[#00d2ff]/30 text-[10px] font-bold transition-all cursor-pointer"
+            title="Fit resolution to viewport"
           >
-            <Sliders className="w-3 h-3 text-[#38bdf8]" />
-            <span className="hidden sm:inline">SCALE</span>
+            <span>FIT</span>
           </button>
 
-          {/* Fullscreen Toggle */}
+          {/* Fullscreen */}
           <button
             onClick={() => {
               playKeyClick();
               handleToggleFullscreen();
             }}
-            className="hidden md:flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#ffd600]/10 hover:bg-[#ffd600]/20 text-[#ffd600] border border-[#ffd600]/30 text-[10px] font-bold transition-all cursor-pointer"
+            className="p-1 rounded bg-[#ffd600]/10 hover:bg-[#ffd600]/20 text-[#ffd600] border border-[#ffd600]/30 text-[10px] font-bold transition-all cursor-pointer"
             title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
           >
             {isFullscreen ? <Minimize className="w-3 h-3" /> : <Maximize className="w-3 h-3" />}
           </button>
 
-          <div className="hidden sm:flex items-center gap-1">
-            <button
-              onClick={handleAudioToggle}
-              className="tos-btn"
-              title={isAudioOn ? 'Mute terminal audio' : 'Enable terminal audio'}
-            >
-              {isAudioOn ? 'AUDIO ON' : 'MUTED'}
-            </button>
-            <button
-              onClick={() => {
-                playKeyClick();
-                setDisplaySettingsTab('audio');
-                setIsDisplaySettingsOpen(true);
-              }}
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#ffd600]/10 hover:bg-[#ffd600]/20 text-[#ffd600] border border-[#ffd600]/30 text-[10px] font-bold transition-all cursor-pointer"
-              title="Configure Market Trigger Alert Audio Chimes & Sound Selector"
-            >
-              <Bell className="w-3 h-3 text-[#ffd600]" />
-              <span className="hidden xl:inline">CHIMES</span>
-            </button>
-          </div>
-
-          <span className="hidden xl:inline text-[#64748b]">BLOOMBERG v26.4</span>
-
-          {/* Desktop Resolution Profile Badge with 1-Click Fit */}
-          <div className="hidden lg:flex items-center bg-[#101726] rounded border border-[#1e2a40] hover:border-[#38bdf8] text-[9.5px] font-mono text-[#38bdf8] transition-colors overflow-hidden">
-            <button
-              type="button"
-              onClick={() => {
-                playExecutionChime();
-                handleFitToScreen();
-              }}
-              className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-[#38bdf8]/15 cursor-pointer"
-              title="Scale &amp; Fit everything to (16&quot;) Full HD+ 1920 × 1200 WVA display"
-            >
-              <Monitor className="w-3 h-3 text-[#38bdf8]" />
-              <span>(16") FHD+ 1920×1200 WVA</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                playKeyClick();
-                setIsDeviceModalOpen(true);
-              }}
-              className="px-1 py-0.5 border-l border-[#1e2a40] hover:bg-[#38bdf8]/20 text-[#64748b] hover:text-[#38bdf8] cursor-pointer"
-              title="Open Device &amp; Display Control Center"
-            >
-              <Sliders className="w-2.5 h-2.5" />
-            </button>
-          </div>
-
+          {/* Audio Mute/Unmute */}
           <button
-            onClick={() => setCurrentScreen('monitor')}
-            className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#101726] border border-[#1e2a40] hover:border-[#38bdf8] text-[10px] text-[#cbd5e1] font-mono cursor-pointer transition-colors"
-            title="Real-Time Margin Health Telemetry. Click to view Monitor Blotter."
+            onClick={handleAudioToggle}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#141b28] hover:bg-[#202a3c] text-[#cbd5e1] border border-[#222d44] text-[10px] font-bold cursor-pointer"
+            title={isAudioOn ? 'Audio On (Click to mute)' : 'Muted (Click to unmute)'}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-pulse" />
-            <span className="text-[#8b9bb4]">MARGIN:</span>
-            <span className="font-bold text-[#00e676]">
-              {account.cashBalance > 0 ? `${(Math.max(0, 100 - (marginRequirement / account.cashBalance) * 100)).toFixed(0)}%` : '100%'}
-            </span>
+            {isAudioOn ? <Volume2 className="w-3 h-3 text-[#00e676]" /> : <VolumeX className="w-3 h-3 text-[#8c8c8c]" />}
+            <span className="hidden xl:inline">{isAudioOn ? 'AUDIO' : 'MUTE'}</span>
+          </button>
+
+          {/* Settings Modal Button */}
+          <button
+            onClick={() => {
+              playKeyClick();
+              setIsDisplaySettingsOpen(true);
+            }}
+            className="p-1 rounded bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 text-[#38bdf8] border border-[#38bdf8]/30 cursor-pointer"
+            title="Display, Sound & Device Settings"
+          >
+            <Sliders className="w-3 h-3" />
+          </button>
+
+          {/* Clock Bell */}
+          <button
+            type="button"
+            onClick={() => {
+              playKeyClick();
+              setIsClockBellModalOpen(true);
+            }}
+            className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#101726] border border-[#1e2a40] text-[10px] font-mono text-[#ff9900] cursor-pointer hover:border-[#ff9900]/50"
+            title="Market Clocks & Exchange Bells"
+          >
+            <Clock className="w-3 h-3 text-[#ff9900]" />
+            <span>{clockTime.est}</span>
           </button>
         </div>
       </div>
@@ -2316,93 +2167,14 @@ export default function App() {
               ? 'bg-[#ff9900] text-black border-[#ff9900] font-black shadow-[0_0_8px_rgba(255,153,0,0.4)]'
               : 'bg-[#151c2d] hover:bg-[#ff9900]/20 text-[#ff9900] border-[#ff9900]/60'
           }`}
-          title={isSidebarOpen ? 'Collapse Left Watchlist Sidebar (make screen bigger)' : 'Show Left Watchlist Sidebar & Strategy Suite'}
+          title={isSidebarOpen ? 'Collapse Left Watchlist Sidebar' : 'Show Left Watchlist Sidebar'}
         >
           {isSidebarOpen ? (
-            <PanelLeftClose className="w-3.5 h-3.5 text-black" />
+            <PanelLeftClose className="w-3.5 h-3.5" />
           ) : (
-            <PanelLeftOpen className="w-3.5 h-3.5 text-[#ff9900]" />
+            <PanelLeftOpen className="w-3.5 h-3.5" />
           )}
-          <span>{isSidebarOpen ? 'HIDE WATCHLIST' : 'SHOW WATCHLIST'}</span>
-        </button>
-
-        {/* Account Monitor quick access directly beside Watchlist */}
-        <button
-          type="button"
-          onClick={() => {
-            playKeyClick();
-            setMonitorSubTab('positions');
-            setCurrentScreen('monitor');
-          }}
-          className={`px-2 py-1 rounded text-xs font-bold border transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ${
-            currentScreen === 'monitor' && monitorSubTab === 'positions'
-              ? 'bg-[#38bdf8]/20 text-[#38bdf8] border-[#38bdf8]/60 shadow-[0_0_8px_rgba(56,189,248,0.35)]'
-              : 'bg-[#101726] text-[#38bdf8] border-[#1e2a44] hover:border-[#38bdf8]/50'
-          }`}
-          title="Account Monitor Blotter: Real-time positions, Net Liquidity & Margin Health <MON>"
-        >
-          <Activity className="w-3.5 h-3.5 text-[#38bdf8]" />
-          <span className="font-bold">MONITOR</span>
-          {account.positions.length > 0 && (
-            <span className="text-[9.5px] px-1 py-0.2 rounded bg-[#38bdf8]/30 font-mono text-white">
-              {account.positions.length}
-            </span>
-          )}
-        </button>
-
-        {/* Account Statement quick access (under Monitor Hub) */}
-        <button
-          type="button"
-          onClick={() => {
-            playKeyClick();
-            setMonitorSubTab('statement');
-            setCurrentScreen('monitor');
-          }}
-          className={`px-2 py-1 rounded text-xs font-bold border transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ${
-            currentScreen === 'monitor' && monitorSubTab === 'statement'
-              ? 'bg-[#ff9900]/20 text-[#ff9900] border-[#ff9900]/60 shadow-[0_0_8px_rgba(255,153,0,0.35)]'
-              : 'bg-[#101726] text-[#cbd5e1] border-[#1e2a44] hover:text-[#ff9900] hover:border-[#ff9900]/50'
-          }`}
-          title="Official Account Statement, Audited Cash Ledger & Tax Summary under Monitor Hub <STMT>"
-        >
-          <FileText className="w-3.5 h-3.5 text-[#ff9900]" />
-          <span className="font-bold">STMT</span>
-        </button>
-
-        {/* Probability Cone quick access right beside Watchlist */}
-        <button
-          type="button"
-          onClick={() => {
-            playKeyClick();
-            setCurrentScreen('cone');
-          }}
-          className={`px-2 py-1 rounded text-xs font-bold border transition-colors flex items-center gap-1 shrink-0 cursor-pointer ${
-            currentScreen === 'cone'
-              ? 'bg-[#00e5ff]/20 text-[#00e5ff] border-[#00e5ff]/50 shadow-[0_0_8px_rgba(0,229,255,0.3)]'
-              : 'bg-[#141d2e] text-[#00e5ff] border-[#22314a] hover:border-[#00e5ff]/50'
-          }`}
-          title="Direct Quick-Jump to Probability Cone & Volatility Envelope <CONE>"
-        >
-          <TrendingUp className="w-3.5 h-3.5 text-[#00e5ff]" />
-          <span className="hidden sm:inline">CONE</span>
-        </button>
-
-        {/* Options Expiration quick access right beside Watchlist */}
-        <button
-          type="button"
-          onClick={() => {
-            playKeyClick();
-            setCurrentScreen('exp');
-          }}
-          className={`px-2 py-1 rounded text-xs font-bold border transition-colors flex items-center gap-1 shrink-0 cursor-pointer ${
-            currentScreen === 'exp'
-              ? 'bg-[#ff9900]/20 text-[#ff9900] border-[#ff9900]/50 shadow-[0_0_8px_rgba(255,153,0,0.3)]'
-              : 'bg-[#141d2e] text-[#ff9900] border-[#22314a] hover:border-[#ff9900]/50'
-          }`}
-          title="Direct Quick-Jump to Options Expiration Calendar & Term Structure <EXP>"
-        >
-          <Calendar className="w-3.5 h-3.5 text-[#ff9900]" />
-          <span className="hidden sm:inline">EXP</span>
+          <span>{isSidebarOpen ? 'HIDE WATCHLIST' : 'WATCHLIST'}</span>
         </button>
 
         <form onSubmit={handleCommandSubmit} className="symbol-input-group">
@@ -2424,7 +2196,7 @@ export default function App() {
               <span className="font-bold">{selectedTicker.symbol}</span>
               {selectedTicker.symbol.startsWith('/') || selectedTicker.assetType === 'future' ? (
                 <span className="text-[#ffd600] font-black bg-[#ffd600]/20 px-1 py-0.5 rounded border border-[#ffd600]/40 text-[9px]">
-                  FUTURES & FOP
+                  FUTURES &amp; FOP
                 </span>
               ) : (
                 <span>US EQUITY</span>
@@ -2440,16 +2212,9 @@ export default function App() {
             {isUp ? '+' : ''}
             {selectedTicker.changePercent.toFixed(2)}%)
           </div>
-          <div className="quote-delta" style={{ color: '#64748b' }}>
+          <div className="quote-delta hidden md:block" style={{ color: '#64748b' }}>
             Prev: {selectedTicker.previousClose.toFixed(selectedTicker.symbol === '/6E' ? 4 : selectedTicker.symbol === '/NG' ? 3 : 2)}
           </div>
-          {(selectedTicker.symbol.startsWith('/') || selectedTicker.assetType === 'future') && (
-            <div className="hidden lg:flex items-center gap-1.5 text-[9px] font-bold text-[#ffd600] bg-[#ffd600]/10 px-1.5 py-0.5 rounded border border-[#ffd600]/30">
-              <span>MULT: {selectedTicker.multiplier || 50}x</span>
-              <span className="text-[#8c8c8c]">·</span>
-              <span>TICK: {selectedTicker.tickSize || 0.25}</span>
-            </div>
-          )}
 
           {/* Expected Price Move Header Metric */}
           <button
@@ -2457,7 +2222,7 @@ export default function App() {
               playKeyClick();
               setIsExpectedMoveOpen(true);
             }}
-            title="Click to view comprehensive Expected Price Move Matrix across all expirations"
+            title="Click to view Expected Price Move Matrix across all expirations"
             className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0b101d] border border-[#1e293b] hover:border-[#00d2ff]/60 transition-all text-left cursor-pointer group"
           >
             <div>
@@ -2477,9 +2242,8 @@ export default function App() {
           </button>
         </div>
 
-        {/* Action Tools moved closer to the left beside the watchlist tab & search bar */}
-        <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-          {/* Quick Stock & Futures Trade Execution Button */}
+        {/* Action Tools */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => {
               playKeyClick();
@@ -2487,36 +2251,12 @@ export default function App() {
               setIsStockTradeOpen(true);
             }}
             className="px-2.5 py-1 bg-[var(--bull)]/20 hover:bg-[var(--bull)]/30 text-[var(--bull)] border border-[var(--bull)]/50 rounded font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-            title={`Trade shares of ${selectedTicker.symbol} (Fractional permitted) or futures contracts`}
+            title={`Trade shares of ${selectedTicker.symbol} or futures contracts`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
             <span>TRADE</span>
           </button>
 
-          {/* Quick ETF Fundamentals / Company Profile Button */}
-          <button
-            onClick={() => {
-              playKeyClick();
-              setCurrentScreen('des');
-            }}
-            className={`px-2 py-1 rounded font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer ${
-              currentScreen === 'des'
-                ? 'bg-[#00d2ff] text-black shadow-[0_0_8px_rgba(0,210,255,0.4)]'
-                : 'bg-[#00d2ff]/15 hover:bg-[#00d2ff]/25 text-[#00d2ff] border border-[#00d2ff]/40'
-            }`}
-            title={`Open ${isTickerETF(selectedTicker.symbol, selectedTicker.name) ? 'ETF Fundamentals & Holdings' : 'Company Profile & Valuation Multiples'} <DES>`}
-          >
-            {isTickerETF(selectedTicker.symbol, selectedTicker.name) ? (
-              <PieChart className="w-3.5 h-3.5" />
-            ) : (
-              <Building2 className="w-3.5 h-3.5" />
-            )}
-            <span className="hidden sm:inline">{isTickerETF(selectedTicker.symbol, selectedTicker.name) ? 'ETF FUNDAMENTALS' : 'COMPANY PROFILE'}</span>
-            <span className="sm:hidden">DES</span>
-            <span className="text-[9px] px-1 rounded bg-[#00d2ff]/25 font-mono hidden sm:inline">DES</span>
-          </button>
-
-          {/* All Options Strategies Directory Button */}
           <button
             onClick={() => {
               playKeyClick();
@@ -2528,85 +2268,23 @@ export default function App() {
             <span>STRATEGIES</span>
             <span className="text-[10px] bg-[#ff9900]/30 px-1 rounded font-mono font-black">45+</span>
           </button>
-
-          {/* DEFCON Threat Gauge Live Header Button under Global Macro */}
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMacroSubTab('defcon');
-              setCurrentScreen('macro');
-            }}
-            className={`hidden sm:flex px-2 py-1 rounded font-black text-xs items-center gap-1.5 transition-all shadow-sm cursor-pointer ${
-              currentScreen === 'macro' && macroSubTab === 'defcon'
-                ? 'bg-[#ffd600] text-black shadow-[0_0_8px_rgba(255,214,0,0.4)]'
-                : 'bg-[#ffd600]/15 hover:bg-[#ffd600]/25 text-[#ffd600] border border-[#ffd600]/40'
-            }`}
-            title="defconlevel.com OSINT: Currently DEFCON 3 (ROUND HOUSE) under Global Macro Hub"
-          >
-            <span className="w-2 h-2 rounded-full bg-[#ffd600] animate-pulse" />
-            <span>DEFCON 3</span>
-          </button>
-
-          {/* Canadian Accounts Quick Access Button under Monitor */}
-          <button
-            onClick={() => {
-              playKeyClick();
-              setMonitorSubTab('tfsa_rrsp');
-              setCurrentScreen('monitor');
-            }}
-            className={`hidden md:flex px-2 py-1 rounded font-black text-xs items-center gap-1.5 transition-all shadow-sm cursor-pointer ${
-              currentScreen === 'monitor' && monitorSubTab === 'tfsa_rrsp'
-                ? 'bg-[#00d2ff] text-black shadow-[0_0_8px_rgba(0,210,255,0.4)]'
-                : 'bg-[#00d2ff]/15 hover:bg-[#00d2ff]/25 text-[#00d2ff] border border-[#00d2ff]/40'
-            }`}
-            title="Open Canadian Registered Accounts (TFSA, RRSP, FHSA, RESP) & Norbert's Gambit under Monitor Hub"
-          >
-            <span>🇨🇦</span>
-            <span>TFSA / RRSP</span>
-          </button>
-
-          {/* Quick Display & Scale Button */}
-          <button
-            onClick={() => {
-              playKeyClick();
-              setIsDisplaySettingsOpen(true);
-            }}
-            className="px-2 py-1 bg-[#38bdf8]/15 hover:bg-[#38bdf8]/25 text-[#38bdf8] border border-[#38bdf8]/40 rounded font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-            title="Display Scaling & Screen Layout Customizer (Fit Screen, Mobile, Tablet, Zoom)"
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">SCALE</span>
-          </button>
-
-          {/* GitHub Sync & Export Repository Button */}
-          <button
-            onClick={() => {
-              playKeyClick();
-              setIsGitHubOpen(true);
-            }}
-            className="hidden lg:flex px-2 py-1 bg-[#00e676]/15 hover:bg-[#00e676]/25 text-[#00e676] border border-[#00e676]/40 rounded font-black text-xs items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-            title="Export repository & sync changes to GitHub"
-          >
-            <Github className="w-3.5 h-3.5" />
-            <span>GITHUB</span>
-          </button>
         </div>
 
-        {/* Right Status Badges (BP & Net Liq) + Account Privacy & Stealth Controls */}
-        <div className="ml-auto flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-          {/* Visual Margin Call Warning in Header */}
+        {/* Right Status Badges & Privacy Controls */}
+        <div className="ml-auto flex items-center gap-1.5 shrink-0">
+          {/* Visual Margin Call Warning */}
           {isMarginWarning && (
             <div
               className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#ff334b] text-white font-black text-[10px] animate-pulse border border-white/40 shadow-[0_0_10px_rgba(255,51,75,0.9)]"
-              title={`Margin required ($${marginRequirement.toFixed(0)}) exceeds 80% of settled cash ($${account.cashBalance.toFixed(0)})`}
+              title={`Margin required ($${marginRequirement.toFixed(0)}) exceeds 80% of cash`}
             >
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">MARGIN WARNING: {marginUsagePct.toFixed(0)}%</span>
+              <span className="hidden sm:inline">MARGIN: {marginUsagePct.toFixed(0)}%</span>
             </div>
           )}
 
-          {/* Account Privacy & Stealth Mode Quick Control Group */}
-          <div className="flex items-center gap-0.5 bg-[#0a0f1d] border border-[#1e293b] rounded p-0.5 shadow-sm">
+          {/* Account Privacy & Stealth Mode Toggle */}
+          <div className="flex items-center bg-[#0a0f1d] border border-[#1e293b] rounded p-0.5 shadow-sm">
             <button
               onClick={handleTogglePrivacyMode}
               className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
@@ -2614,7 +2292,7 @@ export default function App() {
                   ? 'bg-[#ff9900]/20 text-[#ff9900] border border-[#ff9900]/50 shadow-[0_0_8px_rgba(255,153,0,0.3)]'
                   : 'text-[#8b9bb4] hover:text-white'
               }`}
-              title={privacySettings.isPrivacyMode ? 'Stealth Mode Active (Balances Masked). Click to unmask (Alt+P).' : 'Activate Stealth Mode to mask balances (Alt+P).'}
+              title={privacySettings.isPrivacyMode ? 'Stealth Mode Active (Balances Masked). Click to unmask.' : 'Activate Stealth Mode (Alt+P)'}
             >
               {privacySettings.isPrivacyMode ? <EyeOff className="w-3 h-3 text-[#ff9900]" /> : <Eye className="w-3 h-3" />}
               <span className="hidden md:inline">{privacySettings.isPrivacyMode ? 'MASKED' : 'STEALTH'}</span>
@@ -2628,16 +2306,6 @@ export default function App() {
               title="Instant Screen Camouflage / Frosted Blur Lock"
             >
               <Lock className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => {
-                playKeyClick();
-                setIsPrivacyModalOpen(true);
-              }}
-              className="p-1 rounded text-[#8b9bb4] hover:text-white hover:bg-[#1e293b] transition-all cursor-pointer"
-              title="Open Account Privacy & Security Settings"
-            >
-              <Shield className="w-3 h-3" />
             </button>
           </div>
 
@@ -2698,258 +2366,240 @@ export default function App() {
               <span>HIDE</span>
             </button>
           </div>
-          {/* Gadget 1: Modular Multi-Market Watchlist (Separate US & Canadian Stocks, Futures & Dual View) */}
-          <WatchlistSidebarGadget
-            tickers={tickers}
-            selectedSymbol={selectedSymbol}
-            onSelectTicker={(sym) => {
-              setSelectedSymbol(sym);
-              setCurrentScreen('omon');
-              if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                setIsSidebarOpen(false);
-              }
-            }}
-            onOpenFullBlotter={() => setIsWatchlistModalOpen(true)}
-            onOpenTSXFuturesHub={() => setIsTSXFuturesHubOpen(true)}
-          />
 
-          {/* Quick Account Monitor & Health Bridge directly beside Watchlist */}
-          <div className="bg-[#0b101c] border-b border-[#1e2a44] p-2 flex flex-col gap-1.5 text-[10px]">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => {
-                  playKeyClick();
-                  setCurrentScreen('monitor');
-                }}
-                className="flex items-center gap-1.5 text-[#38bdf8] hover:text-white font-bold transition-colors cursor-pointer group"
-                title="Open Real-Time Positions & Margin Health Monitor <MON>"
-              >
-                <Activity className="w-3.5 h-3.5 text-[#38bdf8] group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold tracking-wider">ACCOUNT MONITOR</span>
-                {account.positions.length > 0 && (
-                  <span className="px-1 py-0.2 rounded bg-[#38bdf8]/25 text-[#38bdf8] text-[9px] font-mono">
-                    {account.positions.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  playKeyClick();
-                  setMonitorSubTab('portfolio');
-                  setCurrentScreen('monitor');
-                }}
-                className="text-[9px] text-[#8b9bb4] hover:text-white font-mono hover:underline cursor-pointer"
-                title="View full Portfolio Blotter under Monitor Hub"
-              >
-                PORT &gt;
-              </button>
-            </div>
-
-            {/* Account Quick Metrics Row */}
-            <div className="grid grid-cols-2 gap-1.5 bg-[#070b14] p-1.5 rounded border border-[#172033]">
-              <div
-                onClick={handleTogglePrivacyMode}
-                className="flex flex-col cursor-pointer"
-                title={privacySettings.isPrivacyMode ? 'Click to unmask' : 'Click to mask Net Liq'}
-              >
-                <span className="text-[8.5px] text-[#64748b] uppercase font-mono">Net Liquidity</span>
-                <span className="font-mono font-bold text-white text-[10.5px]">
-                  {maskCurrency(netLiq, privacySettings.isPrivacyMode, '$', 0)}
-                </span>
-              </div>
-              <div
-                onClick={() => {
-                  playKeyClick();
-                  setCurrentScreen('monitor');
-                }}
-                className="flex flex-col cursor-pointer"
-                title="Margin Capacity. Click to inspect Margin Health in Monitor."
-              >
-                <span className="text-[8.5px] text-[#64748b] uppercase font-mono">Margin Health</span>
-                <span className="font-mono font-bold text-[#00e676] text-[10.5px] flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00e676] animate-pulse inline-block" />
-                  {account.cashBalance > 0
-                    ? `${Math.max(0, 100 - (marginRequirement / account.cashBalance) * 100).toFixed(0)}% OK`
-                    : '100% OK'}
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Probability Cone & Expiration Links */}
-            <div className="flex items-center justify-between pt-0.5 border-t border-[#151f33] text-[9.5px]">
-              <button
-                onClick={() => {
-                  playKeyClick();
-                  setCurrentScreen('cone');
-                }}
-                className="flex items-center gap-1 text-[#00e5ff] hover:text-white font-bold transition-colors cursor-pointer"
-                title="Inspect Probability Cone for active ticker"
-              >
-                <TrendingUp className="w-3 h-3 text-[#00e5ff]" />
-                <span>CONE &gt;</span>
-              </button>
-              <button
-                onClick={() => {
-                  playKeyClick();
-                  setCurrentScreen('exp');
-                }}
-                className="flex items-center gap-1 text-[#ff9900] hover:text-white font-bold transition-colors cursor-pointer"
-                title="Inspect Options Expiration Schedule"
-              >
-                <Calendar className="w-3 h-3 text-[#ff9900]" />
-                <span>EXP &gt;</span>
-              </button>
-            </div>
+          {/* Sidebar Segmented Navigation Bar */}
+          <div className="grid grid-cols-4 bg-[#070b14] border-b border-[#1e2a44] p-1 gap-1 text-[10px] font-bold shrink-0">
+            <button
+              onClick={() => {
+                playKeyClick();
+                setSidebarActiveTab('watchlist');
+              }}
+              className={`py-1 px-1 rounded flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                sidebarActiveTab === 'watchlist'
+                  ? 'bg-[#ff9900] text-black font-black shadow-sm'
+                  : 'text-[#8b9bb4] hover:text-white hover:bg-[#141b28]'
+              }`}
+              title="Watchlist & Custom Folders"
+            >
+              <Folder className="w-3 h-3" />
+              <span>WATCH</span>
+            </button>
+            <button
+              onClick={() => {
+                playKeyClick();
+                setSidebarActiveTab('strategies');
+              }}
+              className={`py-1 px-1 rounded flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                sidebarActiveTab === 'strategies'
+                  ? 'bg-[#ff9900] text-black font-black shadow-sm'
+                  : 'text-[#8b9bb4] hover:text-white hover:bg-[#141b28]'
+              }`}
+              title="Strategy Templates & Catalog"
+            >
+              <Zap className="w-3 h-3" />
+              <span>STRATS</span>
+            </button>
+            <button
+              onClick={() => {
+                playKeyClick();
+                setSidebarActiveTab('analysis');
+              }}
+              className={`py-1 px-1 rounded flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                sidebarActiveTab === 'analysis'
+                  ? 'bg-[#ff9900] text-black font-black shadow-sm'
+                  : 'text-[#8b9bb4] hover:text-white hover:bg-[#141b28]'
+              }`}
+              title="Options Volatility Analytics"
+            >
+              <BarChart2 className="w-3 h-3" />
+              <span>ANLYS</span>
+            </button>
+            <button
+              onClick={() => {
+                playKeyClick();
+                setSidebarActiveTab('earnings');
+              }}
+              className={`py-1 px-1 rounded flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                sidebarActiveTab === 'earnings'
+                  ? 'bg-[#ff9900] text-black font-black shadow-sm'
+                  : 'text-[#8b9bb4] hover:text-white hover:bg-[#141b28]'
+              }`}
+              title="Earnings Calendar"
+            >
+              <Calendar className="w-3 h-3" />
+              <span>EARN</span>
+            </button>
           </div>
 
-          {/* Gadget 2: Options Analysis with IV Rank 20/80 Alerts, 30D Sparkline, Country & Geo-Political Risk Heatmap, and Yield Curve */}
-          <OptionsAnalysisSidebarGadget
-            selectedTicker={selectedTicker}
-            atmMetrics={atmMetrics}
-            currentTickerPcr={currentTickerPcr}
-            onSelectTicker={(sym) => setSelectedSymbol(sym)}
-            onOpenFullGeoRiskModal={() => setIsCountryRiskOpen(true)}
-            onNavigateToTariff={() => setCurrentScreen('tariff')}
-            onNavigateToYieldCurve={() => setCurrentScreen('yc')}
-            onOpenNetGamma={() => setIsNetGammaOpen(true)}
-          />
+          {/* Active Sidebar Gadget */}
+          {sidebarActiveTab === 'watchlist' && (
+            <WatchlistSidebarGadget
+              tickers={tickers}
+              selectedSymbol={selectedSymbol}
+              onSelectTicker={(sym) => {
+                setSelectedSymbol(sym);
+                setCurrentScreen('omon');
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                  setIsSidebarOpen(false);
+                }
+              }}
+              onOpenFullBlotter={() => setIsWatchlistModalOpen(true)}
+              onOpenTSXFuturesHub={() => setIsTSXFuturesHubOpen(true)}
+            />
+          )}
 
-          {/* Gadget: Earnings Calendar Panel with 5-Day IV Sparkline */}
-          <EarningsCalendarSidebar
-            tickers={tickers}
-            selectedSymbol={selectedSymbol}
-            onSelectTicker={(sym) => setSelectedSymbol(sym)}
-            onNavigateToOpec={() => setCurrentScreen('opec')}
-          />
-
-          {/* Gadget 3: Quick Templates */}
-          <div className="gadget" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div className="gadget-header flex items-center justify-between">
-              <span>Quick Templates</span>
-              <button
-                onClick={() => {
-                  playKeyClick();
-                  setIsStrategyCatalogOpen(true);
-                }}
-                className="text-[#ff9900] hover:underline font-bold text-[9px]"
-                title="Open Institutional Options Strategy Directory"
-              >
-                + Catalog ({ALL_OPTIONS_STRATEGIES.length})
-              </button>
-            </div>
-            <div className="gadget-content" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <select
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleApplyStrategyTemplate(e.target.value);
-                  }
-                }}
-                defaultValue=""
-                style={{ width: '100%', background: '#222', border: '1px solid #444', color: '#ccc', padding: '4px', fontSize: '10px' }}
-              >
-                <option value="" disabled>Apply Strategy Template...</option>
-                <optgroup label="Single Leg Options">
-                  <option value="long-call">Long Call (Bullish)</option>
-                  <option value="short-call">Short Call (Naked)</option>
-                  <option value="long-put">Long Put (Bearish)</option>
-                  <option value="cash-secured-put">Cash-Secured Put</option>
-                </optgroup>
-                <optgroup label="Vertical Spreads">
-                  <option value="bull-call-spread">Bull Call Spread (+Δ)</option>
-                  <option value="bear-call-spread">Bear Call Spread (+Θ)</option>
-                  <option value="bull-put-spread">Bull Put Spread (+Θ)</option>
-                  <option value="bear-put-spread">Bear Put Spread (-Δ)</option>
-                </optgroup>
-                <optgroup label="Straddles & Strangles">
-                  <option value="long-straddle">Long Straddle (Vol)</option>
-                  <option value="short-straddle">Short Straddle (Theta)</option>
-                  <option value="long-strangle">Long Strangle (OTM)</option>
-                  <option value="short-strangle">Short Strangle</option>
-                </optgroup>
-                <optgroup label="Wings / Condors & Butterflies">
-                  <option value="iron-condor">Iron Condor (4-Leg)</option>
-                  <option value="reverse-iron-condor">Reverse Iron Condor</option>
-                  <option value="iron-butterfly">Iron Butterfly (ATM)</option>
-                  <option value="long-call-butterfly">Call Butterfly (1-2-1)</option>
-                  <option value="long-put-butterfly">Put Butterfly (1-2-1)</option>
-                  <option value="broken-wing-call-butterfly">Broken Wing Butterfly</option>
-                </optgroup>
-                <optgroup label="Calendars & Diagonals">
-                  <option value="call-calendar-spread">Call Calendar Spread</option>
-                  <option value="put-calendar-spread">Put Calendar Spread</option>
-                  <option value="double-calendar-spread">Double Calendar Spread</option>
-                  <option value="double-diagonal-spread">Double Diagonal Spread</option>
-                  <option value="poor-mans-covered-call">Poor Man's Covered Call (PMCC)</option>
-                  <option value="poor-mans-covered-put">Poor Man's Covered Put (PMCP)</option>
-                </optgroup>
-                <optgroup label="Covered & Synthetics">
-                  <option value="covered-call">Covered Call (Buy-Write)</option>
-                  <option value="protective-put">Protective Put (Hedge)</option>
-                  <option value="collar">Collar (Zero-Cost)</option>
-                  <option value="synthetic-long-stock">Synthetic Long Stock</option>
-                </optgroup>
-                <optgroup label="Ratios & Exotics">
-                  <option value="jade-lizard">Jade Lizard</option>
-                  <option value="reverse-jade-lizard">Reverse Jade Lizard</option>
-                  <option value="call-ratio-backspread">Call Ratio Backspread</option>
-                  <option value="put-ratio-backspread">Put Ratio Backspread</option>
-                  <option value="box-spread">Box Spread (Arbitrage)</option>
-                </optgroup>
-              </select>
-
-              <button
-                onClick={() => {
-                  playKeyClick();
-                  setIsStrategyCatalogOpen(true);
-                }}
-                className="tos-btn w-full py-1 text-center font-bold text-[#ff9900] bg-[#ff9900]/10 hover:bg-[#ff9900]/20 border border-[#ff9900]/40 flex items-center justify-center gap-1"
-              >
-                <span>+ BROWSE ALL 45+ STRATEGIES</span>
-              </button>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
-                {[
-                  { label: 'Covered Call', id: 'covered-call' },
-                  { label: 'Bull Call', id: 'bull-call-spread' },
-                  { label: 'Iron Condor', id: 'iron-condor' },
-                  { label: 'Straddle', id: 'long-straddle' },
-                  { label: 'Butterfly', id: 'long-call-butterfly' },
-                  { label: 'Calendar', id: 'call-calendar-spread' },
-                ].map((tpl) => (
-                  <button
-                    key={tpl.id}
-                    onClick={() => handleApplyStrategyTemplate(tpl.id)}
-                    className="tos-btn truncate"
-                    style={{ fontSize: '9px', padding: '3px 4px' }}
-                  >
-                    {tpl.label}
-                  </button>
-                ))}
+          {sidebarActiveTab === 'strategies' && (
+            <div className="gadget flex-1 flex flex-col p-2 overflow-y-auto">
+              <div className="gadget-header flex items-center justify-between mb-2">
+                <span className="font-bold text-[#ff9900]">Quick Templates</span>
+                <button
+                  onClick={() => {
+                    playKeyClick();
+                    setIsStrategyCatalogOpen(true);
+                  }}
+                  className="text-[#ff9900] hover:underline font-bold text-[9px] cursor-pointer"
+                  title="Open Institutional Options Strategy Directory"
+                >
+                  + Catalog ({ALL_OPTIONS_STRATEGIES.length})
+                </button>
               </div>
+              <div className="flex flex-col gap-2">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleApplyStrategyTemplate(e.target.value);
+                    }
+                  }}
+                  defaultValue=""
+                  className="w-full bg-[#141b28] border border-[#222d44] text-[#cbd5e1] p-1.5 text-xs rounded"
+                >
+                  <option value="" disabled>Apply Strategy Template...</option>
+                  <optgroup label="Single Leg Options">
+                    <option value="long-call">Long Call (Bullish)</option>
+                    <option value="short-call">Short Call (Naked)</option>
+                    <option value="long-put">Long Put (Bearish)</option>
+                    <option value="cash-secured-put">Cash-Secured Put</option>
+                  </optgroup>
+                  <optgroup label="Vertical Spreads">
+                    <option value="bull-call-spread">Bull Call Spread (+Δ)</option>
+                    <option value="bear-call-spread">Bear Call Spread (+Θ)</option>
+                    <option value="bull-put-spread">Bull Put Spread (+Θ)</option>
+                    <option value="bear-put-spread">Bear Put Spread (-Δ)</option>
+                  </optgroup>
+                  <optgroup label="Straddles & Strangles">
+                    <option value="long-straddle">Long Straddle (Vol)</option>
+                    <option value="short-straddle">Short Straddle (Theta)</option>
+                    <option value="long-strangle">Long Strangle (OTM)</option>
+                    <option value="short-strangle">Short Straddle</option>
+                  </optgroup>
+                  <optgroup label="Wings / Condors & Butterflies">
+                    <option value="iron-condor">Iron Condor (4-Leg)</option>
+                    <option value="reverse-iron-condor">Reverse Iron Condor</option>
+                    <option value="iron-butterfly">Iron Butterfly (ATM)</option>
+                    <option value="long-call-butterfly">Call Butterfly (1-2-1)</option>
+                    <option value="long-put-butterfly">Put Butterfly (1-2-1)</option>
+                    <option value="broken-wing-call-butterfly">Broken Wing Butterfly</option>
+                  </optgroup>
+                  <optgroup label="Calendars & Diagonals">
+                    <option value="call-calendar-spread">Call Calendar Spread</option>
+                    <option value="put-calendar-spread">Put Calendar Spread</option>
+                    <option value="double-calendar-spread">Double Calendar Spread</option>
+                    <option value="double-diagonal-spread">Double Diagonal Spread</option>
+                    <option value="poor-mans-covered-call">Poor Man's Covered Call (PMCC)</option>
+                    <option value="poor-mans-covered-put">Poor Man's Covered Put (PMCP)</option>
+                  </optgroup>
+                  <optgroup label="Covered & Synthetics">
+                    <option value="covered-call">Covered Call (Buy-Write)</option>
+                    <option value="protective-put">Protective Put (Hedge)</option>
+                    <option value="collar">Collar (Zero-Cost)</option>
+                    <option value="synthetic-long-stock">Synthetic Long Stock</option>
+                  </optgroup>
+                  <optgroup label="Ratios & Exotics">
+                    <option value="jade-lizard">Jade Lizard</option>
+                    <option value="reverse-jade-lizard">Reverse Jade Lizard</option>
+                    <option value="call-ratio-backspread">Call Ratio Backspread</option>
+                    <option value="put-ratio-backspread">Put Ratio Backspread</option>
+                    <option value="box-spread">Box Spread (Arbitrage)</option>
+                  </optgroup>
+                </select>
 
-              {builderLegs.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-[#3c3c3c] text-[10px]">
-                  <div className="flex justify-between text-[#8c8c8c]">
-                    <span>Active Legs:</span>
-                    <strong className="text-white">{builderLegs.length}</strong>
-                  </div>
-                  <button
-                    onClick={() => setCurrentScreen('ovme')}
-                    className="tos-btn w-full mt-1.5 text-center text-[#ff9900]"
-                  >
-                    Evaluate in OVME &gt;
-                  </button>
+                <button
+                  onClick={() => {
+                    playKeyClick();
+                    setIsStrategyCatalogOpen(true);
+                  }}
+                  className="tos-btn w-full py-1.5 text-center font-bold text-[#ff9900] bg-[#ff9900]/10 hover:bg-[#ff9900]/20 border border-[#ff9900]/40 flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <span>+ BROWSE ALL 45+ STRATEGIES</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-1.5 mt-1">
+                  {[
+                    { label: 'Covered Call', id: 'covered-call' },
+                    { label: 'Bull Call', id: 'bull-call-spread' },
+                    { label: 'Iron Condor', id: 'iron-condor' },
+                    { label: 'Straddle', id: 'long-straddle' },
+                    { label: 'Butterfly', id: 'long-call-butterfly' },
+                    { label: 'Calendar', id: 'call-calendar-spread' },
+                  ].map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => handleApplyStrategyTemplate(tpl.id)}
+                      className="tos-btn truncate py-1 text-[10px] cursor-pointer"
+                    >
+                      {tpl.label}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
 
-            <div className="mt-auto p-2 border-t border-[#3c3c3c] flex justify-between items-center text-[10px] text-[#8c8c8c]">
-              <span>Pos: {account.positions.length}</span>
-              <button onClick={handleResetAccount} className="tos-btn hover:text-white">
-                Reset Acct
-              </button>
+                {builderLegs.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-[#222d44] text-[10px]">
+                    <div className="flex justify-between text-[#8b9bb4]">
+                      <span>Active Legs:</span>
+                      <strong className="text-white">{builderLegs.length}</strong>
+                    </div>
+                    <button
+                      onClick={() => setCurrentScreen('ovme')}
+                      className="tos-btn w-full mt-2 text-center text-[#ff9900] cursor-pointer"
+                    >
+                      Evaluate in OVME &gt;
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {sidebarActiveTab === 'analysis' && (
+            <OptionsAnalysisSidebarGadget
+              selectedTicker={selectedTicker}
+              atmMetrics={atmMetrics}
+              currentTickerPcr={currentTickerPcr}
+              onSelectTicker={(sym) => setSelectedSymbol(sym)}
+              onOpenFullGeoRiskModal={() => setIsCountryRiskOpen(true)}
+              onNavigateToTariff={() => {
+                setMacroSubTab('tariff');
+                setCurrentScreen('macro');
+              }}
+              onNavigateToYieldCurve={() => {
+                setMacroSubTab('yield_curve');
+                setCurrentScreen('macro');
+              }}
+              onOpenNetGamma={() => setIsNetGammaOpen(true)}
+            />
+          )}
+
+          {sidebarActiveTab === 'earnings' && (
+            <EarningsCalendarSidebar
+              tickers={tickers}
+              selectedSymbol={selectedSymbol}
+              onSelectTicker={(sym) => setSelectedSymbol(sym)}
+              onNavigateToOpec={() => {
+                setMacroSubTab('opec');
+                setCurrentScreen('macro');
+              }}
+            />
+          )}
         </aside>
 
         {/* Floating Quick Edge Toggle when Watchlist is Collapsed */}
@@ -2976,128 +2626,7 @@ export default function App() {
         {/* Content Area */}
         <main className="content-area">
           <div className="tab-bar">
-            {/* Watchlist Tab in Primary Tab Bar */}
-            <div
-              className={`tab ${isSidebarOpen ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#8b9bb4] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setIsSidebarOpen((prev) => {
-                  const next = !prev;
-                  try {
-                    localStorage.setItem('strikepoint_sidebar_open', String(next));
-                  } catch {}
-                  return next;
-                });
-              }}
-              title={isSidebarOpen ? 'Collapse Left Watchlist Sidebar (make screen bigger)' : 'Show Left Watchlist Sidebar & Institutional Blotter'}
-            >
-              {isSidebarOpen ? (
-                <PanelLeftClose className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
-              ) : (
-                <PanelLeftOpen className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
-              )}
-              {isSidebarOpen ? 'WATCHLIST (OPEN)' : 'WATCHLIST'}
-            </div>
-
-            {/* GICS Canada Tab directly beside Watchlist */}
-            <div
-              className={`tab ${currentScreen === 'gics' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('gics');
-              }}
-              title="Open GICS Canada: 11 Sectors, Heatmap, TSX Equities & Macro Intelligence <GICS>"
-            >
-              <span className="mr-1 inline-block">🇨🇦</span>
-              GICS CANADA
-            </div>
-
-            {/* Guaranteed Investment Certificates (GIC) Tab directly beside GICS Canada */}
-            <div
-              className={`tab ${currentScreen === 'gic' ? 'active text-[#00e676] font-extrabold shadow-[0_0_8px_rgba(0,230,118,0.3)]' : 'text-[#00e676] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('gic');
-              }}
-              title="Open Guaranteed Investment Certificates (GIC): Rates Matrix, Purchasable Holdings, Auto-Rollover Engine & CDIC Protection <GIC>"
-            >
-              <ShieldCheck className="w-3 h-3 inline-block mr-1 text-[#00e676]" />
-              GIC (BUY &amp; ROLLOVER)
-            </div>
-
-            {/* Unified Account Monitor Tab (Positions & Blotter, Portfolio & Greeks, Statement, TFSA / RRSP) */}
-            <div
-              className={`tab ${['monitor', 'port', 'statement'].includes(currentScreen) ? 'active text-[#38bdf8] font-extrabold shadow-[0_0_8px_rgba(56,189,248,0.3)]' : 'text-[#38bdf8] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('monitor');
-              }}
-              title="Open Unified Monitor Hub: Positions & Blotter, Portfolio & Greeks, Statement, and TFSA / RRSP Suite <MON>"
-            >
-              <Activity className="w-3 h-3 inline-block mr-1 text-[#38bdf8]" />
-              <span>MONITOR</span>
-              {account.positions.length > 0 && (
-                <span className="ml-1 text-[9px] px-1 py-0.2 rounded bg-[#38bdf8]/25 font-mono">
-                  {account.positions.length}
-                </span>
-              )}
-              {['monitor', 'port', 'statement'].includes(currentScreen) && (
-                <span className="ml-1.5 text-[8.5px] px-1 py-0.2 rounded bg-[#090d16] border border-[#1e2a44] text-[#38bdf8] font-mono tracking-wider hidden sm:inline">
-                  {monitorSubTab === 'positions'
-                    ? 'POSITIONS'
-                    : monitorSubTab === 'portfolio'
-                    ? 'PORTFOLIO'
-                    : monitorSubTab === 'statement'
-                    ? 'STATEMENT'
-                    : 'TFSA/RRSP'}
-                </span>
-              )}
-            </div>
-
-            {/* Probability Cone directly beside Watchlist Tab */}
-            <div
-              className={`tab ${currentScreen === 'cone' ? 'active text-[#00e5ff] font-extrabold shadow-[0_0_8px_rgba(0,229,255,0.3)]' : 'text-[#00e5ff] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('cone');
-              }}
-              title="Show Probability Cone, Volatility Envelopes & Monte Carlo Paths <CONE>"
-            >
-              <TrendingUp className="w-3 h-3 inline-block mr-1 text-[#00e5ff]" />
-              PROBABILITY CONE
-            </div>
-
-            {/* Options Expiration Schedule */}
-            <div
-              className={`tab ${currentScreen === 'exp' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('exp');
-              }}
-              title="Show Options Expiration Schedule, Volatility Term Structure & Settlement Rules <EXP>"
-            >
-              <Calendar className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
-              OPTIONS EXPIRATION
-            </div>
-
-            {/* ETF Fundamentals & Company Profile <DES> */}
-            <div
-              className={`tab ${currentScreen === 'des' ? 'active text-[#00d2ff] font-extrabold shadow-[0_0_8px_rgba(0,210,255,0.3)]' : 'text-[#00d2ff] hover:text-white'}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('des');
-              }}
-              title="Open ETF Fundamentals & Holdings, Company Profiles, Multiples & Fractional Shares Trading <DES>"
-            >
-              {isTickerETF(selectedTicker.symbol, selectedTicker.name) ? (
-                <PieChart className="w-3 h-3 inline-block mr-1 text-[#00d2ff]" />
-              ) : (
-                <Building2 className="w-3 h-3 inline-block mr-1 text-[#00d2ff]" />
-              )}
-              <span>{isTickerETF(selectedTicker.symbol, selectedTicker.name) ? 'ETF FUNDAMENTALS' : 'COMPANY PROFILE'}</span>
-              <span className="text-[8.5px] ml-1 opacity-75 font-mono">{'<DES>'}</span>
-            </div>
-
+            {/* Primary Core Options Screens */}
             <div
               className={`tab ${currentScreen === 'omon' ? 'active' : ''}`}
               onClick={() => {
@@ -3127,6 +2656,42 @@ export default function App() {
             >
               RISK PROFILE
             </div>
+
+            <div
+              className={`tab ${currentScreen === 'cone' ? 'active text-[#00e5ff] font-extrabold shadow-[0_0_8px_rgba(0,229,255,0.3)]' : 'text-[#00e5ff] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('cone');
+              }}
+              title="Probability Cone, Volatility Envelopes & Monte Carlo Paths <CONE>"
+            >
+              <TrendingUp className="w-3 h-3 inline-block mr-1 text-[#00e5ff]" />
+              CONE
+            </div>
+
+            <div
+              className={`tab ${currentScreen === 'vols' || currentScreen === 'vega' || currentScreen === 'surf' || currentScreen === 'hivg' ? 'active text-[#00e5ff] font-extrabold shadow-[0_0_8px_rgba(0,229,255,0.3)]' : ''}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('vols');
+              }}
+              title="Unified Volatility Suite (Multi-Skew, ATM Term Structure, Vega Term Structure & Constant Maturity, 3D Surface & Historical Vol)"
+            >
+              VOLATILITY
+            </div>
+
+            <div
+              className={`tab ${currentScreen === 'exp' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('exp');
+              }}
+              title="Options Expiration Schedule, Volatility Term Structure & Settlement Rules <EXP>"
+            >
+              <Calendar className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
+              EXPIRATIONS
+            </div>
+
             <div
               className={`tab ${currentScreen === 'scen' ? 'active' : ''}`}
               onClick={() => {
@@ -3134,8 +2699,9 @@ export default function App() {
                 setCurrentScreen('scen');
               }}
             >
-              SCENARIO MATRIX
+              SCENARIO
             </div>
+
             <div
               className={`tab ${currentScreen === 'flow' ? 'active' : ''}`}
               onClick={() => {
@@ -3145,16 +2711,7 @@ export default function App() {
             >
               FLOW TAPE
             </div>
-            <div
-              className={`tab ${currentScreen === 'vols' || currentScreen === 'vega' || currentScreen === 'surf' || currentScreen === 'hivg' ? 'active text-[#00e5ff] font-extrabold shadow-[0_0_8px_rgba(0,229,255,0.3)]' : ''}`}
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('vols');
-              }}
-              title="Open Unified Volatility & Vega Suite (Multi-Skew, ATM Term Structure, Vega Term Structure & Constant Maturity, 3D Surface & Historical Vol)"
-            >
-              VOLATILITY
-            </div>
+
             <div
               className={`tab ${currentScreen === 'chart' ? 'active' : ''}`}
               onClick={() => {
@@ -3175,13 +2732,31 @@ export default function App() {
               PCR ENGINE
             </div>
 
+            {/* Fundamentals & Macro Intelligence */}
+            <div
+              className={`tab ${currentScreen === 'des' ? 'active text-[#00d2ff] font-extrabold shadow-[0_0_8px_rgba(0,210,255,0.3)]' : 'text-[#00d2ff] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('des');
+              }}
+              title="Company Profile, Valuation Multiples & ETF Fundamentals <DES>"
+            >
+              {isTickerETF(selectedTicker.symbol, selectedTicker.name) ? (
+                <PieChart className="w-3 h-3 inline-block mr-1 text-[#00d2ff]" />
+              ) : (
+                <Building2 className="w-3 h-3 inline-block mr-1 text-[#00d2ff]" />
+              )}
+              <span>{isTickerETF(selectedTicker.symbol, selectedTicker.name) ? 'ETF FUNDAMENTALS' : 'COMPANY PROFILE'}</span>
+            </div>
+
+            {/* Global Macro Hub */}
             <div
               className={`tab ${['macro', 'yc', 'opec', 'tariff', 'defcon'].includes(currentScreen) ? 'active text-[#00e676] font-extrabold shadow-[0_0_8px_rgba(0,230,118,0.3)]' : 'text-[#00e676] hover:text-white'}`}
               onClick={() => {
                 playKeyClick();
                 setCurrentScreen('macro');
               }}
-              title="Open Global Macro Hub: Economies, G20 Yield Curves, OPEC & IV, Tariffs, DEFCON 3 & Geo Risk <MACR>"
+              title="Global Macro Hub: Economies, G20 Yield Curves, OPEC & IV, Tariffs, DEFCON 3 & Geo Risk <MACR>"
             >
               <span className="mr-1 inline-block">🌍</span>
               <span>GLOBAL MACRO</span>
@@ -3202,13 +2777,67 @@ export default function App() {
               )}
             </div>
 
+            {/* Unified Account Monitor Hub */}
+            <div
+              className={`tab ${['monitor', 'port', 'statement'].includes(currentScreen) ? 'active text-[#38bdf8] font-extrabold shadow-[0_0_8px_rgba(56,189,248,0.3)]' : 'text-[#38bdf8] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('monitor');
+              }}
+              title="Unified Monitor Hub: Positions & Blotter, Portfolio & Greeks, Statement, and TFSA / RRSP Suite <MON>"
+            >
+              <Activity className="w-3 h-3 inline-block mr-1 text-[#38bdf8]" />
+              <span>MONITOR</span>
+              {account.positions.length > 0 && (
+                <span className="ml-1 text-[9px] px-1 py-0.2 rounded bg-[#38bdf8]/25 font-mono">
+                  {account.positions.length}
+                </span>
+              )}
+              {['monitor', 'port', 'statement'].includes(currentScreen) && (
+                <span className="ml-1.5 text-[8.5px] px-1 py-0.2 rounded bg-[#090d16] border border-[#1e2a44] text-[#38bdf8] font-mono tracking-wider hidden sm:inline">
+                  {monitorSubTab === 'positions'
+                    ? 'POSITIONS'
+                    : monitorSubTab === 'portfolio'
+                    ? 'PORTFOLIO'
+                    : monitorSubTab === 'statement'
+                    ? 'STATEMENT'
+                    : 'TFSA/RRSP'}
+                </span>
+              )}
+            </div>
+
+            {/* Canadian Market Hubs */}
+            <div
+              className={`tab ${currentScreen === 'gics' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('gics');
+              }}
+              title="GICS Canada: 11 Sectors, Heatmap, TSX Equities & Macro Intelligence <GICS>"
+            >
+              <span className="mr-1 inline-block">🇨🇦</span>
+              GICS CANADA
+            </div>
+
+            <div
+              className={`tab ${currentScreen === 'gic' ? 'active text-[#00e676] font-extrabold shadow-[0_0_8px_rgba(0,230,118,0.3)]' : 'text-[#00e676] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('gic');
+              }}
+              title="Guaranteed Investment Certificates (GIC): Rates Matrix & Rollover <GIC>"
+            >
+              <ShieldCheck className="w-3 h-3 inline-block mr-1 text-[#00e676]" />
+              GIC
+            </div>
+
             <div
               className={`tab ${currentScreen === 'witch' ? 'active text-[#c084fc] font-extrabold' : ''}`}
               onClick={() => {
                 playKeyClick();
                 setCurrentScreen('witch');
               }}
-              title="Open Quadruple Witching Intelligence & Expiration Volatility Engine"
+              title="Quadruple Witching Intelligence & Expiration Volatility Engine"
             >
               ⚡ QUAD WITCH
             </div>
@@ -3219,158 +2848,144 @@ export default function App() {
                 playKeyClick();
                 setCurrentScreen('bnn');
               }}
-              title="Watch BNN Bloomberg Free Live Stream & Market Coverage Broadcast <BNN>"
+              title="BNN Bloomberg Free Live Stream & Market Coverage Broadcast <BNN>"
             >
               <span className="w-2 h-2 rounded-full bg-[#ff3b30] animate-pulse inline-block mr-1.5" />
-              BNN LIVE TV
+              BNN TV
             </div>
 
-            {/* Quick Pop-Out Screen Button in Tab Bar */}
+            {/* Pop-Out Screen Button */}
             <button
               onClick={() => {
                 playKeyClick();
                 handleOpenPopOut(currentScreen);
               }}
               className="ml-auto px-2 py-0.5 my-1 mr-1 rounded bg-[#00e5ff]/15 hover:bg-[#00e5ff]/25 text-[#00e5ff] border border-[#00e5ff]/40 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0"
-              title="Pop out this active screen into a separate floating window"
+              title="Pop out active screen into a separate floating window"
             >
               <ExternalLink className="w-3 h-3" />
               <span className="hidden sm:inline">POP OUT</span>
             </button>
           </div>
 
-          <div style={{ background: '#252525', padding: '4px 12px', display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1px solid #333', overflowX: 'auto' }} className="no-scrollbar">
-            {/* StrikePoint Public Brand Icon Badge in Workspace Bar */}
-            <div
-              onClick={() => {
-                playKeyClick();
-                setIsStrategyCatalogOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#101522] border border-[#3c3c3c] hover:border-[#ff9900]/70 cursor-pointer shrink-0 group transition-all"
-              title="StrikePoint Options Terminal"
-            >
-              <img
-                src="/icon.svg"
-                alt="StrikePoint"
-                className="w-3.5 h-3.5 object-contain rounded drop-shadow-[0_0_4px_rgba(255,153,0,0.5)] group-hover:scale-110 transition-transform"
-              />
-              <span className="font-extrabold text-[10px] text-[#ff9900] tracking-wider hidden lg:inline">STRIKEPOINT</span>
-            </div>
-
-            {/* Direct Link to Full Options Expiration Calendar */}
-            <button
-              onClick={() => {
-                playKeyClick();
-                setCurrentScreen('exp');
-              }}
-              className="tos-btn bg-[#ff9900]/15 hover:bg-[#ff9900]/25 text-[#ff9900] border border-[#ff9900]/40 font-bold flex items-center gap-1 shrink-0 cursor-pointer"
-              style={{ fontSize: '10px', padding: '2px 6px' }}
-              title="Show Full Options Expiration Master Calendar, Term Structure & Settlement Rules <EXP>"
-            >
-              <Calendar className="w-3 h-3 text-[#ff9900]" />
-              <span>EXP CALENDAR</span>
-            </button>
-
-            {/* Expiration Month Dropdown */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--accent)' }}>EXP MONTH:</span>
-              <select
-                value={selectedExpMonth}
-                onChange={(e) => {
+          {/* Options Expiration Sub-Header Bar (Only shown on options-relevant screens to eliminate clutter) */}
+          {['omon', 'ovme', 'risk', 'scen', 'vols', 'exp', 'pcr'].includes(currentScreen) && (
+            <div style={{ background: '#252525', padding: '4px 12px', display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1px solid #333', overflowX: 'auto' }} className="no-scrollbar">
+              {/* Direct Link to Full Options Expiration Calendar */}
+              <button
+                onClick={() => {
                   playKeyClick();
-                  const m = e.target.value;
-                  setSelectedExpMonth(m);
-                  if (m !== 'ALL') {
-                    const found = EXPIRATION_PRESETS.find((p) => p.month.toUpperCase() === m.toUpperCase());
-                    if (found) setActiveDte(found.days);
-                  }
+                  setCurrentScreen('exp');
                 }}
-                className="tos-btn"
-                style={{ fontSize: '10px', padding: '2px 4px', fontWeight: 'bold' }}
+                className="tos-btn bg-[#ff9900]/15 hover:bg-[#ff9900]/25 text-[#ff9900] border border-[#ff9900]/40 font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                style={{ fontSize: '10px', padding: '2px 6px' }}
+                title="Show Full Options Expiration Master Calendar <EXP>"
               >
-                <option value="ALL">ALL EXPIRATION MONTHS (18 Cycles)</option>
-                <option value="SEP">SEP '26 (Sep 29 - Front Month)</option>
-                <option value="OCT">OCT '26 (Oct 02 - Oct 30)</option>
-                <option value="NOV">NOV '26 (Nov 06 - Nov 20)</option>
-                <option value="DEC">DEC '26 (Dec 18 - Quarterly)</option>
-                <option value="JAN">JAN '27 (Jan 15 - Monthly)</option>
-                <option value="FEB">FEB '27 (Feb 19 - Monthly)</option>
-                <option value="MAR">MAR '27 (Mar 19 - Quarterly)</option>
-                <option value="APR">APR '27 (Apr 16 - Monthly)</option>
-                <option value="MAY">MAY '27 (May 21 - Monthly)</option>
-                <option value="JUN">JUN '27 (Jun 18 - Quarterly)</option>
-                <option value="SEP">SEP '27 (Sep 17 - LEAPS)</option>
-                <option value="DEC">DEC '27 (Dec 17 - LEAPS)</option>
-              </select>
-            </div>
+                <Calendar className="w-3 h-3 text-[#ff9900]" />
+                <span>EXP CALENDAR</span>
+              </button>
 
-            {/* Quick Month Filter Pills */}
-            <div className="flex items-center gap-1 shrink-0">
-              {['ALL', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'MAR', 'JUN'].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => {
+              {/* Expiration Month Dropdown */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--accent)' }}>EXP MONTH:</span>
+                <select
+                  value={selectedExpMonth}
+                  onChange={(e) => {
                     playKeyClick();
+                    const m = e.target.value;
                     setSelectedExpMonth(m);
                     if (m !== 'ALL') {
                       const found = EXPIRATION_PRESETS.find((p) => p.month.toUpperCase() === m.toUpperCase());
                       if (found) setActiveDte(found.days);
                     }
                   }}
-                  className={`tos-btn ${
-                    selectedExpMonth === m ? 'bg-[#ff9900] text-black font-extrabold border-[#ff9900]' : ''
-                  }`}
-                  style={{ fontSize: '9px', padding: '2px 6px' }}
+                  className="tos-btn"
+                  style={{ fontSize: '10px', padding: '2px 4px', fontWeight: 'bold' }}
                 >
-                  {m}
-                </button>
-              ))}
-            </div>
+                  <option value="ALL">ALL EXPIRATION MONTHS (18 Cycles)</option>
+                  <option value="SEP">SEP '26 (Sep 29 - Front Month)</option>
+                  <option value="OCT">OCT '26 (Oct 02 - Oct 30)</option>
+                  <option value="NOV">NOV '26 (Nov 06 - Nov 20)</option>
+                  <option value="DEC">DEC '26 (Dec 18 - Quarterly)</option>
+                  <option value="JAN">JAN '27 (Jan 15 - Monthly)</option>
+                  <option value="FEB">FEB '27 (Feb 19 - Monthly)</option>
+                  <option value="MAR">MAR '27 (Mar 19 - Quarterly)</option>
+                  <option value="APR">APR '27 (Apr 16 - Monthly)</option>
+                  <option value="MAY">MAY '27 (May 21 - Monthly)</option>
+                  <option value="JUN">JUN '27 (Jun 18 - Quarterly)</option>
+                  <option value="SEP">SEP '27 (Sep 17 - LEAPS)</option>
+                  <option value="DEC">DEC '27 (Dec 17 - LEAPS)</option>
+                </select>
+              </div>
 
-            <div style={{ height: '14px', width: '1px', background: '#444' }} className="shrink-0" />
+              {/* Quick Month Filter Pills */}
+              <div className="flex items-center gap-1 shrink-0">
+                {['ALL', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'MAR', 'JUN'].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      playKeyClick();
+                      setSelectedExpMonth(m);
+                      if (m !== 'ALL') {
+                        const found = EXPIRATION_PRESETS.find((p) => p.month.toUpperCase() === m.toUpperCase());
+                        if (found) setActiveDte(found.days);
+                      }
+                    }}
+                    className={`tos-btn ${
+                      selectedExpMonth === m ? 'bg-[#ff9900] text-black font-extrabold border-[#ff9900]' : ''
+                    }`}
+                    style={{ fontSize: '9px', padding: '2px 6px' }}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
 
-            {/* Expiration Date Pills with Month and Days */}
-            <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar">
-              {EXPIRATION_PRESETS.filter(
-                (p) => selectedExpMonth === 'ALL' || p.month.toUpperCase() === selectedExpMonth.toUpperCase()
-              ).map((p) => (
-                <button
-                  key={p.days}
-                  onClick={() => {
-                    playKeyClick();
-                    setActiveDte(p.days);
-                  }}
-                  className={`tos-btn shrink-0 flex items-center gap-1 ${
-                    activeDte === p.days ? 'bg-[#ff9900] text-black font-extrabold border-[#ff9900]' : ''
-                  }`}
-                  style={{ fontSize: '10px', padding: '2px 6px' }}
-                  title={`${p.label} - ${p.category}`}
-                >
-                  <span className="font-extrabold">{p.dateLabel}</span>
-                  <span className="opacity-75 text-[9px]">({p.days}d)</span>
-                  {p.isQuadWitching && (
-                    <span
-                      className={`px-1 py-0.2 rounded text-[7.5px] font-black ${
-                        activeDte === p.days
-                          ? 'bg-black text-[#a855f7]'
-                          : 'bg-[#a855f7] text-black shadow-[0_0_6px_rgba(168,85,247,0.5)]'
-                      }`}
-                      title="Quadruple Witching Expiration (Index Futures + Index Options + Stock Options + Single-Stock Futures)"
-                    >
-                      ⚡ 4W
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+              <div style={{ height: '14px', width: '1px', background: '#444' }} className="shrink-0" />
 
-            <div style={{ color: 'var(--ink-muted)', fontSize: '10px', marginLeft: 'auto' }} className="shrink-0 hidden md:block">
-              Implied Move: <span style={{ color: '#00d2ff', fontWeight: 'bold' }}>±{atmMetrics.movePct.toFixed(2)}%</span>
+              {/* Expiration Date Pills with Month and Days */}
+              <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar">
+                {EXPIRATION_PRESETS.filter(
+                  (p) => selectedExpMonth === 'ALL' || p.month.toUpperCase() === selectedExpMonth.toUpperCase()
+                ).map((p) => (
+                  <button
+                    key={p.days}
+                    onClick={() => {
+                      playKeyClick();
+                      setActiveDte(p.days);
+                    }}
+                    className={`tos-btn shrink-0 flex items-center gap-1 ${
+                      activeDte === p.days ? 'bg-[#ff9900] text-black font-extrabold border-[#ff9900]' : ''
+                    }`}
+                    style={{ fontSize: '10px', padding: '2px 6px' }}
+                    title={`${p.label} - ${p.category}`}
+                  >
+                    <span className="font-extrabold">{p.dateLabel}</span>
+                    <span className="opacity-75 text-[9px]">({p.days}d)</span>
+                    {p.isQuadWitching && (
+                      <span
+                        className={`px-1 py-0.2 rounded text-[7.5px] font-black ${
+                          activeDte === p.days
+                            ? 'bg-black text-[#a855f7]'
+                            : 'bg-[#a855f7] text-black shadow-[0_0_6px_rgba(168,85,247,0.5)]'
+                        }`}
+                        title="Quadruple Witching Expiration"
+                      >
+                        ⚡ 4W
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ color: 'var(--ink-muted)', fontSize: '10px', marginLeft: 'auto' }} className="shrink-0 hidden md:block">
+                Implied Move: <span style={{ color: '#00d2ff', fontWeight: 'bold' }}>±{atmMetrics.movePct.toFixed(2)}%</span>
+              </div>
+              <div style={{ color: 'var(--ink-muted)', fontSize: '10px' }} className="shrink-0 hidden md:block">
+                ATM Straddle: <span style={{ color: '#ffd600', fontWeight: 'bold' }}>${atmMetrics.straddleCost.toFixed(2)}</span>
+              </div>
             </div>
-            <div style={{ color: 'var(--ink-muted)', fontSize: '10px' }} className="shrink-0 hidden md:block">
-              ATM Straddle: <span style={{ color: '#ffd600', fontWeight: 'bold' }}>${atmMetrics.straddleCost.toFixed(2)}</span>
-            </div>
-          </div>
+          )}
 
           <div className={`options-chain-wrapper ${currentScreen === 'risk' ? 'p-0 sm:p-1' : 'p-2'}`}>
             {renderScreenContent()}

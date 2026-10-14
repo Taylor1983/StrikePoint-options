@@ -393,7 +393,7 @@ export const PositionMonitorView: React.FC<PositionMonitorViewProps> = ({
           onSelectAccount={onSelectAccount}
           tickers={tickers}
           isPrivacyMode={isPrivacyMode}
-          onNavigateToMonitor={() => setMonitorSubTab('positions')}
+          onNavigateToMonitor={() => handleSubTabChange('positions')}
           onNavigateToChain={onNavigateToChain}
           onNavigateToRisk={onNavigateToRisk}
         />
