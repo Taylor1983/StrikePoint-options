@@ -82,8 +82,6 @@ export const DisplaySettingsModal: React.FC<DisplaySettingsModalProps> = ({
   onOpenPrivacySuite,
   initialTab = 'display',
 }) => {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = React.useState<'display' | 'audio' | 'device'>(initialTab);
 
   React.useEffect(() => {
@@ -107,6 +105,8 @@ export const DisplaySettingsModal: React.FC<DisplaySettingsModalProps> = ({
     const next = Math.min(1.5, Math.max(0.65, Number((scale + delta).toFixed(2))));
     onScaleChange(next);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">

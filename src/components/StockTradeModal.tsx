@@ -20,9 +20,7 @@ export const StockTradeModal: React.FC<StockTradeModalProps> = ({
   onExecuteTrade,
   initialFractionalMode = false,
 }) => {
-  if (!isOpen) return null;
-
-  const isFuture = ticker.symbol.startsWith('/') || ticker.assetType === 'future';
+  const isFuture = ticker?.symbol?.startsWith('/') || ticker?.assetType === 'future';
   const defaultQuantity = isFuture ? 1 : initialFractionalMode ? 0.5 : 10;
 
   const [action, setAction] = useState<'buy' | 'sell'>('buy');
@@ -151,6 +149,8 @@ export const StockTradeModal: React.FC<StockTradeModalProps> = ({
     onExecuteTrade(newOrder, newPosition);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 font-mono text-xs">
