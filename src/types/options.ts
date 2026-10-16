@@ -127,7 +127,7 @@ export interface AccountState {
   orders: Order[];
 }
 
-export type TerminalScreen = 'omon' | 'ovme' | 'risk' | 'cone' | 'scen' | 'flow' | 'vols' | 'chart' | 'port' | 'monitor' | 'statement' | 'hivg' | 'surf' | 'pcr' | 'opec' | 'tariff' | 'defcon' | 'vega' | 'yc' | 'macro' | 'div' | 'witch' | 'bnn' | 'exp' | 'tsxf' | 'gics' | 'gic' | 'des';
+export type TerminalScreen = 'omon' | 'ovme' | 'risk' | 'cone' | 'scen' | 'flow' | 'vols' | 'chart' | 'port' | 'monitor' | 'statement' | 'hivg' | 'surf' | 'pcr' | 'opec' | 'tariff' | 'defcon' | 'vega' | 'yc' | 'macro' | 'div' | 'witch' | 'bnn' | 'exp' | 'fts' | 'tsxf' | 'gics' | 'gic' | 'des' | 'skew' | 'journal' | 'educ';
 
 export interface MarginHealthMetrics {
   healthScore: number; // 0 - 100

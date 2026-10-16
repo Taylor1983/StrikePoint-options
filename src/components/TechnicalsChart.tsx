@@ -56,6 +56,13 @@ import {
   MONTHLY_MARGIN_DEBT_HISTORY,
   MarginDebtStudyResult,
 } from '../services/marginDebtData';
+import {
+  EarningsReport,
+  findEarningsForCandle,
+  getUpcomingEarnings,
+  getEarningsSummaryStats,
+  getEarningsForTicker,
+} from '../services/earningsData';
 
 interface TechnicalsChartProps {
   ticker: Ticker;
@@ -85,6 +92,8 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
   const [showIndicatorMenu, setShowIndicatorMenu] = useState<boolean>(false);
   const [hoveredMacroEvent, setHoveredMacroEvent] = useState<MacroEvent | null>(null);
   const [selectedMacroEvent, setSelectedMacroEvent] = useState<MacroEvent | null>(null);
+  const [hoveredEarnings, setHoveredEarnings] = useState<EarningsReport | null>(null);
+  const [selectedEarnings, setSelectedEarnings] = useState<EarningsReport | null>(null);
 
   // Overlay Indicators toggles
   const [overlays, setOverlays] = useState<{
@@ -105,6 +114,8 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
     stdDev3: boolean;
     macroEvents: boolean;
     marginDebt: boolean;
+    earnings: boolean;
+    impliedVol: boolean;
   }>({
     sma20: true,
     sma50: true,
@@ -123,6 +134,8 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
     stdDev3: true,
     macroEvents: true,
     marginDebt: false,
+    earnings: true,
+    impliedVol: true,
   });
 
   const toggleOverlay = (key: keyof typeof overlays) => {
@@ -239,6 +252,33 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
     return results;
   }, [candles]);
 
+  // Corporate Earnings intersecting the active candle window
+  const earningsInWindow = useMemo(() => {
+    const results: { report: EarningsReport; candleIndex: number; candle: Candle }[] = [];
+    candles.forEach((c, idx) => {
+      const matched = findEarningsForCandle(c.time, ticker.symbol);
+      if (matched) {
+        results.push({ report: matched, candleIndex: idx, candle: c });
+      }
+    });
+    return results;
+  }, [candles, ticker.symbol]);
+
+  // Upcoming earnings catalyst for the symbol
+  const upcomingEarnings = useMemo(() => {
+    return getUpcomingEarnings(ticker.symbol);
+  }, [ticker.symbol]);
+
+  // Institutional earnings statistics
+  const earningsStats = useMemo(() => {
+    return getEarningsSummaryStats(
+      ticker.symbol,
+      ticker.daysToEarnings,
+      ticker.earningsDate,
+      ticker.earningsEstimatedMovePct
+    );
+  }, [ticker.symbol, ticker.daysToEarnings, ticker.earningsDate, ticker.earningsEstimatedMovePct]);
+
   // Compute all technical indicators over the active candle window
   const closes = useMemo(() => candles.map((c) => c.close), [candles]);
 
@@ -349,6 +389,36 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
     });
     return path;
   };
+
+  // Dual-Axis Implied Volatility Bounds & Scaling (10% to 100%)
+  const { minIvVal, maxIvVal } = useMemo(() => {
+    const vals = volatilityStudy.ivSeries.filter((v): v is number => v !== null);
+    if (vals.length === 0) return { minIvVal: 10, maxIvVal: 80 };
+    const minI = Math.max(5, Math.floor(Math.min(...vals) * 0.85));
+    const maxI = Math.ceil(Math.max(...vals) * 1.15);
+    return { minIvVal: minI, maxIvVal: Math.max(maxI, minI + 15) };
+  }, [volatilityStudy.ivSeries]);
+
+  const getIvY = (ivPct: number) => {
+    return (
+      chartPadding.top +
+      mainPriceHeight -
+      ((ivPct - minIvVal) / (maxIvVal - minIvVal || 1)) * (mainPriceHeight - 20) - 10
+    );
+  };
+
+  // Helper to generate SVG Path for Implied Volatility curve
+  const ivOverlayPath = useMemo(() => {
+    if (!overlays.impliedVol) return '';
+    let path = '';
+    volatilityStudy.ivSeries.forEach((val, idx) => {
+      if (val === null) return;
+      const x = chartPadding.left + idx * candleSlotWidth + candleSlotWidth / 2;
+      const y = getIvY(val);
+      path += `${path === '' ? 'M' : ' L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    });
+    return path;
+  }, [overlays.impliedVol, volatilityStudy.ivSeries, candleSlotWidth, minIvVal, maxIvVal]);
 
   // Bollinger Band shaded area polygon
   const bollingerAreaPath = useMemo(() => {
@@ -674,6 +744,40 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
             </>
           )}
 
+          {/* ---------------- Implied Volatility (IV) Overlay Toggle ---------------- */}
+          <button
+            onClick={() => toggleOverlay('impliedVol')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1.5 ${
+              overlays.impliedVol
+                ? 'bg-[#00e5ff]/20 border-[#00e5ff] text-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.3)]'
+                : 'bg-[#0a0f1a] border-[#1e2638] text-[#556782] hover:text-[#8b9bb4]'
+            }`}
+            title="Show 30-Day Implied Volatility (IV) Dual-Axis Curve on Main Chart"
+          >
+            <Activity className="w-3 h-3 text-[#00e5ff]" />
+            <span>[IV] IMPLIED VOL</span>
+            <span className="text-[9px] px-1 bg-black/40 rounded font-black text-[#00e5ff]">
+              {(volatilityStudy.ivSeries[activeIdx] ?? (ticker.currentIV ? ticker.currentIV * 100 : 25)).toFixed(1)}%
+            </span>
+          </button>
+
+          {/* ---------------- Corporate Earnings [E] Overlay Toggle ---------------- */}
+          <button
+            onClick={() => toggleOverlay('earnings')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1.5 ${
+              overlays.earnings
+                ? 'bg-[#fbbf24]/20 border-[#fbbf24] text-[#fbbf24] shadow-[0_0_8px_rgba(251,191,36,0.3)]'
+                : 'bg-[#0a0f1a] border-[#1e2638] text-[#556782] hover:text-[#8b9bb4]'
+            }`}
+            title="Display Corporate Quarterly Earnings Reports & Upcoming Catalyst Projections on chart"
+          >
+            <Calendar className="w-3 h-3 text-[#fbbf24]" />
+            <span>[E] EARNINGS</span>
+            <span className="text-[9px] px-1 bg-black/40 rounded font-black text-[#fbbf24]">
+              {earningsInWindow.length + (upcomingEarnings ? 1 : 0)}
+            </span>
+          </button>
+
           <button
             onClick={() => toggleOverlay('macroEvents')}
             className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1.5 ${
@@ -687,6 +791,28 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
             <span>MACRO EVENTS</span>
             <span className="text-[9px] px-1 bg-black/40 rounded font-black text-[#ff9900]">
               {macroEventsInWindow.length}
+            </span>
+          </button>
+
+          {/* Quick Sub-Chart Switcher: IV vs HV Vol */}
+          <button
+            onClick={() => {
+              playKeyClick();
+              setSubChart('VOLATILITY');
+            }}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1.5 ${
+              subChart === 'VOLATILITY'
+                ? 'bg-[#00e5ff] text-black border-[#00e5ff] font-black shadow-[0_0_10px_rgba(0,229,255,0.4)]'
+                : 'bg-[#0a0f1a] border-[#00e5ff]/40 text-[#00e5ff] hover:bg-[#00e5ff]/15'
+            }`}
+            title="Switch Sub-Chart to Institutional Implied vs Historical Volatility (IV/HV & VRP)"
+          >
+            <Activity className="w-3 h-3" />
+            <span>IV vs HV VOL</span>
+            <span className={`text-[9px] px-1 py-0.2 rounded font-black ${
+              subChart === 'VOLATILITY' ? 'bg-black text-[#00e5ff]' : 'bg-black/50 text-[#00e5ff]'
+            }`}>
+              {(volatilityStudy.ivSeries[activeIdx] ?? (ticker.currentIV ? ticker.currentIV * 100 : 25)).toFixed(1)}%
             </span>
           </button>
 
@@ -767,7 +893,7 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
           </div>
         </div>
 
-        {/* Real-time OHLCV Bar HUD */}
+        {/* Real-time OHLCV & Volatility / Earnings Bar HUD */}
         {activeCandle && (
           <div className="flex flex-wrap items-center gap-2.5 text-[11px] bg-[#090e1a] px-2.5 py-1 rounded border border-[#1e2638]/70">
             <span className="text-[#ff9900] font-bold">{activeCandle.time}</span>
@@ -786,6 +912,21 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
             <span className="text-[#8b9bb4]">
               Vol: <strong className="text-[#00d2ff]">{(activeCandle.volume / 1e6).toFixed(1)}M</strong>
             </span>
+            {overlays.impliedVol && (
+              <span className="text-[#00e5ff] font-bold">
+                IV(30D): <strong>{volatilityStudy.ivSeries[activeIdx]?.toFixed(1) ?? (ticker.currentIV ? (ticker.currentIV * 100).toFixed(1) : '25.0')}%</strong>
+              </span>
+            )}
+            {overlays.impliedVol && volatilityStudy.hv20Series[activeIdx] !== null && (
+              <span className="text-[#8b9bb4]">
+                HV(20D): <strong className="text-white">{volatilityStudy.hv20Series[activeIdx]?.toFixed(1)}%</strong>
+              </span>
+            )}
+            {overlays.earnings && ticker.daysToEarnings !== null && ticker.daysToEarnings !== undefined && (
+              <span className="text-[#fbbf24] font-bold bg-[#fbbf24]/10 px-1.5 py-0.2 rounded border border-[#fbbf24]/30">
+                [E] {ticker.earningsDate} ({ticker.daysToEarnings}d) • ±{ticker.earningsEstimatedMovePct}%
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -1411,6 +1552,328 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
                   </g>
                 );
               })}
+            </g>
+          )}
+
+          {/* ---------------- Implied Volatility (IV 30D) Dual-Axis Curve & Axis ---------------- */}
+          {overlays.impliedVol && (
+            <g>
+              {/* Dual-Axis IV Scale Gridlines & Labels on Right Edge */}
+              {[minIvVal, Math.round((minIvVal + maxIvVal) / 2), maxIvVal].map((ivVal) => {
+                const y = getIvY(ivVal);
+                return (
+                  <g key={`iv-grid-${ivVal}`}>
+                    <line
+                      x1={chartPadding.left}
+                      y1={y}
+                      x2={svgWidth - chartPadding.right}
+                      y2={y}
+                      stroke="#00e5ff"
+                      strokeWidth="0.5"
+                      strokeDasharray="2 4"
+                      opacity="0.18"
+                    />
+                    <text
+                      x={svgWidth - chartPadding.right + 6}
+                      y={y + 3}
+                      fill="#00e5ff"
+                      opacity="0.75"
+                      fontSize="8"
+                      fontFamily="JetBrains Mono"
+                    >
+                      {ivVal.toFixed(0)}% IV
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Glowing Implied Volatility (30D) Path */}
+              <path
+                d={ivOverlayPath}
+                fill="none"
+                stroke="#00e5ff"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.88"
+                className="drop-shadow-[0_0_6px_rgba(0,229,255,0.7)]"
+              />
+
+              {/* Current IV 30D Marker Tag on Right Axis */}
+              {(() => {
+                const currIvPct =
+                  volatilityStudy.ivSeries[activeIdx] ??
+                  (ticker.currentIV ? ticker.currentIV * 100 : 25);
+                const tagY = getIvY(currIvPct);
+                return (
+                  <g>
+                    <line
+                      x1={chartPadding.left}
+                      y1={tagY}
+                      x2={svgWidth - chartPadding.right}
+                      y2={tagY}
+                      stroke="#00e5ff"
+                      strokeWidth="1"
+                      strokeDasharray="3 3"
+                      opacity="0.6"
+                    />
+                    <rect
+                      x={svgWidth - chartPadding.right + 2}
+                      y={tagY - 7}
+                      width={70}
+                      height={15}
+                      rx="2"
+                      fill="#00e5ff"
+                    />
+                    <text
+                      x={svgWidth - chartPadding.right + 37}
+                      y={tagY + 4}
+                      fill="#000000"
+                      fontSize="8.5"
+                      fontWeight="black"
+                      fontFamily="JetBrains Mono"
+                      textAnchor="middle"
+                    >
+                      IV: {currIvPct.toFixed(1)}%
+                    </text>
+                  </g>
+                );
+              })()}
+
+              {/* Cursor Active Point on IV Curve */}
+              {volatilityStudy.ivSeries[activeIdx] !== null && (
+                <circle
+                  cx={chartPadding.left + activeIdx * candleSlotWidth + candleSlotWidth / 2}
+                  cy={getIvY(volatilityStudy.ivSeries[activeIdx]!)}
+                  r="4"
+                  fill="#00e5ff"
+                  stroke="#05070a"
+                  strokeWidth="1.5"
+                  className="animate-pulse"
+                />
+              )}
+            </g>
+          )}
+
+          {/* ---------------- Corporate Earnings [E] Markers & Catalyst Pins ---------------- */}
+          {overlays.earnings && (
+            <g>
+              {/* Historical Quarterly Earnings Pins */}
+              {earningsInWindow.map((eItem, eIdx) => {
+                const xCenter = chartPadding.left + eItem.candleIndex * candleSlotWidth + candleSlotWidth / 2;
+                const isHovered = hoveredEarnings?.id === eItem.report.id;
+                const isSelected = selectedEarnings?.id === eItem.report.id;
+                const isBeat = eItem.report.resultType === 'BEAT';
+                const isMiss = eItem.report.resultType === 'MISS';
+                const pinColor = isBeat ? '#10b981' : isMiss ? '#ef4444' : '#fbbf24';
+
+                return (
+                  <g
+                    key={`earn-pin-${eIdx}`}
+                    onMouseEnter={() => setHoveredEarnings(eItem.report)}
+                    onMouseLeave={() => setHoveredEarnings(null)}
+                    onClick={() => {
+                      playKeyClick();
+                      setSelectedEarnings(isSelected ? null : eItem.report);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {/* Vertical Catalyst Guide Line */}
+                    <line
+                      x1={xCenter}
+                      y1={chartPadding.top + 16}
+                      x2={xCenter}
+                      y2={chartPadding.top + mainPriceHeight}
+                      stroke={pinColor}
+                      strokeWidth={isHovered || isSelected ? '2' : '1.2'}
+                      strokeDasharray="3 3"
+                      opacity={isHovered || isSelected ? '0.95' : '0.6'}
+                    />
+
+                    {/* Top Interactive Pin Badge */}
+                    <rect
+                      x={xCenter - 26}
+                      y={chartPadding.top - 4}
+                      width={52}
+                      height={18}
+                      rx="3"
+                      fill={isHovered || isSelected ? pinColor : '#090d18'}
+                      stroke={pinColor}
+                      strokeWidth={isHovered || isSelected ? '2' : '1.2'}
+                      className="shadow-lg"
+                    />
+                    <text
+                      x={xCenter}
+                      y={chartPadding.top + 9}
+                      fill={isHovered || isSelected ? '#000000' : pinColor}
+                      fontSize="8.5"
+                      fontWeight="black"
+                      fontFamily="JetBrains Mono"
+                      textAnchor="middle"
+                    >
+                      [E] {eItem.report.fiscalQuarter.split(' ')[0]}
+                    </text>
+
+                    {/* Stock Reaction Tag Pill */}
+                    {eItem.report.stockReactionPct !== undefined && (
+                      <g>
+                        <rect
+                          x={xCenter - 20}
+                          y={chartPadding.top + 16}
+                          width={40}
+                          height={11}
+                          rx="2"
+                          fill={pinColor}
+                          opacity={isHovered || isSelected ? '1' : '0.85'}
+                        />
+                        <text
+                          x={xCenter}
+                          y={chartPadding.top + 24.5}
+                          fill="#000000"
+                          fontSize="7.5"
+                          fontWeight="black"
+                          fontFamily="JetBrains Mono"
+                          textAnchor="middle"
+                        >
+                          {eItem.report.stockReactionPct >= 0 ? '+' : ''}
+                          {eItem.report.stockReactionPct.toFixed(1)}%
+                        </text>
+                      </g>
+                    )}
+
+                    {/* Target Pip on Candle Close */}
+                    <circle
+                      cx={xCenter}
+                      cy={getPriceY(eItem.candle.close)}
+                      r={isHovered || isSelected ? '5' : '3.5'}
+                      fill={pinColor}
+                      stroke="#05070a"
+                      strokeWidth="1.5"
+                    />
+                  </g>
+                );
+              })}
+
+              {/* Upcoming Earnings Catalyst Marker & Expected Move Brackets */}
+              {ticker.daysToEarnings !== null && ticker.daysToEarnings !== undefined && (
+                (() => {
+                  const xProj = chartPadding.left + (candles.length - 1) * candleSlotWidth + candleSlotWidth / 2;
+                  const expPct = ticker.earningsEstimatedMovePct || upcomingEarnings?.impliedMovePct || 6.5;
+                  const expDollars = ticker.price * (expPct / 100);
+                  const upperPrice = ticker.price + expDollars;
+                  const lowerPrice = Math.max(1, ticker.price - expDollars);
+                  const upperY = getPriceY(upperPrice);
+                  const lowerY = getPriceY(lowerPrice);
+
+                  return (
+                    <g
+                      className="cursor-pointer"
+                      onClick={() => {
+                        playKeyClick();
+                        if (upcomingEarnings) setSelectedEarnings(upcomingEarnings);
+                      }}
+                    >
+                      {/* Vertical Pulsing Catalyst Line */}
+                      <line
+                        x1={xProj}
+                        y1={chartPadding.top}
+                        x2={xProj}
+                        y2={chartPadding.top + mainPriceHeight}
+                        stroke="#fbbf24"
+                        strokeWidth="1.5"
+                        strokeDasharray="4 3"
+                        opacity="0.85"
+                      />
+
+                      {/* Top Upcoming Catalyst Badge */}
+                      <rect
+                        x={xProj - 60}
+                        y={chartPadding.top - 18}
+                        width={120}
+                        height={16}
+                        rx="2"
+                        fill="#fbbf24"
+                        stroke="#d97706"
+                        strokeWidth="1"
+                        className="animate-pulse shadow-md"
+                      />
+                      <text
+                        x={xProj}
+                        y={chartPadding.top - 6}
+                        fill="#000000"
+                        fontSize="8"
+                        fontWeight="black"
+                        fontFamily="JetBrains Mono"
+                        textAnchor="middle"
+                      >
+                        [E] NEXT: {ticker.earningsDate || upcomingEarnings?.displayDate} ({ticker.daysToEarnings}d)
+                      </text>
+
+                      {/* Upper Expected Move Bracket Line */}
+                      <line
+                        x1={xProj - 15}
+                        y1={upperY}
+                        x2={svgWidth - chartPadding.right}
+                        y2={upperY}
+                        stroke="#fbbf24"
+                        strokeWidth="1"
+                        strokeDasharray="3 3"
+                        opacity="0.8"
+                      />
+                      <rect
+                        x={svgWidth - chartPadding.right + 2}
+                        y={upperY - 6}
+                        width={70}
+                        height={13}
+                        rx="2"
+                        fill="#fbbf24"
+                      />
+                      <text
+                        x={svgWidth - chartPadding.right + 37}
+                        y={upperY + 4}
+                        fill="#000000"
+                        fontSize="8"
+                        fontWeight="black"
+                        fontFamily="JetBrains Mono"
+                        textAnchor="middle"
+                      >
+                        +E: ${upperPrice.toFixed(2)} (+{expPct}%)
+                      </text>
+
+                      {/* Lower Expected Move Bracket Line */}
+                      <line
+                        x1={xProj - 15}
+                        y1={lowerY}
+                        x2={svgWidth - chartPadding.right}
+                        y2={lowerY}
+                        stroke="#fbbf24"
+                        strokeWidth="1"
+                        strokeDasharray="3 3"
+                        opacity="0.8"
+                      />
+                      <rect
+                        x={svgWidth - chartPadding.right + 2}
+                        y={lowerY - 6}
+                        width={70}
+                        height={13}
+                        rx="2"
+                        fill="#fbbf24"
+                      />
+                      <text
+                        x={svgWidth - chartPadding.right + 37}
+                        y={lowerY + 4}
+                        fill="#000000"
+                        fontSize="8"
+                        fontWeight="black"
+                        fontFamily="JetBrains Mono"
+                        textAnchor="middle"
+                      >
+                        -E: ${lowerPrice.toFixed(2)} (-{expPct}%)
+                      </text>
+                    </g>
+                  );
+                })()
+              )}
             </g>
           )}
 
@@ -2613,6 +3076,263 @@ export const TechnicalsChart: React.FC<TechnicalsChartProps> = ({
               </p>
               <div className="text-[10px] text-[#00d2ff] font-mono">
                 Market Reaction: {selectedMacroEvent.marketReactionNote}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================
+          4C. CORPORATE EARNINGS CALENDAR & IV CRUSH CATALYSTS
+      ======================================================== */}
+      {overlays.earnings && (
+        <div className="bg-[#0b0e17] border border-[#1e2638] rounded-lg p-3 flex flex-col gap-2.5 shadow-xl">
+          <div className="flex flex-wrap items-center justify-between border-b border-[#1e2638] pb-2 gap-2">
+            <span className="text-white font-black text-xs flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5 text-[#fbbf24]" />
+              <span className="text-[#fbbf24] font-black">[E] CORPORATE EARNINGS &amp; OPTIONS IV CRUSH RADAR</span>
+              <span className="text-[#8b9bb4] text-[10px] font-normal">// QUARTERLY CATALYSTS &amp; STRADDLE DYNAMICS</span>
+            </span>
+
+            {/* Aggregate Earnings Volatility Metrics */}
+            <div className="flex flex-wrap items-center gap-3 text-[10px]">
+              <span className="text-[#8b9bb4]">
+                Beat Rate: <strong className="text-[#00e676]">{earningsStats.beatRatePct}%</strong>
+              </span>
+              <span className="text-[#8b9bb4]">
+                Avg Implied Move: <strong className="text-[#fbbf24]">±{earningsStats.avgImpliedMovePct}%</strong>
+              </span>
+              <span className="text-[#8b9bb4]">
+                Avg Actual Move: <strong className="text-white">±{earningsStats.avgActualMovePct}%</strong>
+              </span>
+              <span className="text-[#8b9bb4]">
+                Avg IV Crush: <strong className="text-[#00e5ff]">-{earningsStats.avgIvCrushPts} pts</strong>
+              </span>
+              {ticker.daysToEarnings !== null && ticker.daysToEarnings !== undefined && (
+                <span className="px-2 py-0.5 rounded bg-[#fbbf24]/15 border border-[#fbbf24]/50 text-[#fbbf24] font-black">
+                  Next: {ticker.earningsDate || upcomingEarnings?.displayDate} ({ticker.daysToEarnings}d)
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Quarterly Earnings Event Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {getEarningsForTicker(ticker.symbol).map((report) => {
+              const isSelected = selectedEarnings?.id === report.id;
+              const isHovered = hoveredEarnings?.id === report.id;
+              const isBeat = report.resultType === 'BEAT';
+              const isMiss = report.resultType === 'MISS';
+              const isUpcoming = report.resultType === 'UPCOMING';
+
+              return (
+                <div
+                  key={report.id}
+                  onClick={() => {
+                    playKeyClick();
+                    setSelectedEarnings(isSelected ? null : report);
+                  }}
+                  onMouseEnter={() => setHoveredEarnings(report)}
+                  onMouseLeave={() => setHoveredEarnings(null)}
+                  className={`p-2.5 rounded border cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-[#1a2336] border-[#fbbf24] shadow-[0_0_12px_rgba(251,191,36,0.3)]'
+                      : isHovered
+                      ? 'bg-[#121927] border-[#3b4c6e]'
+                      : 'bg-[#070b13] border-[#182030] hover:bg-[#0f1522]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${
+                        isUpcoming
+                          ? 'border-[#fbbf24] text-[#fbbf24] bg-[#fbbf24]/10 animate-pulse'
+                          : isBeat
+                          ? 'border-[#00e676] text-[#00e676] bg-[#00e676]/10'
+                          : isMiss
+                          ? 'border-[#ff334b] text-[#ff334b] bg-[#ff334b]/10'
+                          : 'border-[#fbbf24] text-[#fbbf24] bg-[#fbbf24]/10'
+                      }`}
+                    >
+                      {report.fiscalQuarter}
+                    </span>
+                    <span className="text-[10px] text-[#8b9bb4] font-mono">
+                      {report.displayDate} ({report.timing})
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between my-1 text-[11px]">
+                    <span className="text-[#8b9bb4]">
+                      EPS: <strong className="text-white">{report.reportedEps !== undefined ? `$${report.reportedEps.toFixed(2)}` : 'Est'}</strong>{' '}
+                      vs ${report.consensusEps.toFixed(2)}
+                    </span>
+                    {report.epsSurprisePct !== undefined && (
+                      <span
+                        className={`text-[10px] font-black ${
+                          report.epsSurprisePct >= 0 ? 'text-[#00e676]' : 'text-[#ff334b]'
+                        }`}
+                      >
+                        {report.epsSurprisePct >= 0 ? '+' : ''}
+                        {report.epsSurprisePct.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-[#8b9bb4]">
+                    <span>
+                      Stock Reaction:{' '}
+                      <strong
+                        className={
+                          (report.stockReactionPct ?? 0) >= 0 ? 'text-[#00e676]' : 'text-[#ff334b]'
+                        }
+                      >
+                        {report.stockReactionPct !== undefined
+                          ? `${report.stockReactionPct >= 0 ? '+' : ''}${report.stockReactionPct.toFixed(1)}%`
+                          : `Exp ±${report.impliedMovePct}%`}
+                      </strong>
+                    </span>
+                    <span className="text-[#00e5ff] font-mono">
+                      {report.ivCrushPts !== undefined ? `IV ${report.ivCrushPts} pts` : `Straddle ±${report.impliedMovePct}%`}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Expanded Selected Earnings Report Detail Card */}
+          {selectedEarnings && (
+            <div className="bg-[#121927] border border-[#fbbf24]/60 rounded-lg p-3.5 relative text-xs shadow-2xl animate-in fade-in">
+              <button
+                onClick={() => setSelectedEarnings(null)}
+                className="absolute top-2.5 right-2.5 text-[#8b9bb4] hover:text-white px-2 py-0.5 rounded bg-black/40 border border-[#2d3748]"
+              >
+                ✕ CLOSE
+              </button>
+
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 bg-[#fbbf24] text-black font-black rounded text-[10px]">
+                  [E] EARNINGS AUDIT
+                </span>
+                <span className="text-white font-black text-sm">
+                  {ticker.symbol} // {selectedEarnings.fiscalQuarter} Earnings Catalyst Analysis
+                </span>
+                <span className="text-[#8b9bb4] text-[11px] font-mono">
+                  Reported on {selectedEarnings.displayDate} ({selectedEarnings.timing})
+                </span>
+                <span
+                  className={`text-[10px] font-black px-2 py-0.5 rounded border ${
+                    selectedEarnings.resultType === 'BEAT'
+                      ? 'border-[#00e676] text-[#00e676] bg-[#00e676]/10'
+                      : selectedEarnings.resultType === 'MISS'
+                      ? 'border-[#ff334b] text-[#ff334b] bg-[#ff334b]/10'
+                      : 'border-[#fbbf24] text-[#fbbf24] bg-[#fbbf24]/10'
+                  }`}
+                >
+                  {selectedEarnings.resultType}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 bg-[#080c14] p-2.5 rounded border border-[#1e2638] my-2 text-[11px]">
+                <div>
+                  <span className="text-[#8b9bb4] block text-[9px]">REPORTED EPS</span>
+                  <span className="text-white font-extrabold text-sm">
+                    {selectedEarnings.reportedEps !== undefined ? `$${selectedEarnings.reportedEps.toFixed(2)}` : 'Pending'}
+                  </span>
+                  <span className="text-[#8b9bb4] text-[9px] block">
+                    Consensus: ${selectedEarnings.consensusEps.toFixed(2)}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[#8b9bb4] block text-[9px]">EPS SURPRISE</span>
+                  <span
+                    className={`font-black text-sm ${
+                      (selectedEarnings.epsSurprisePct ?? 0) >= 0 ? 'text-[#00e676]' : 'text-[#ff334b]'
+                    }`}
+                  >
+                    {selectedEarnings.epsSurprisePct !== undefined
+                      ? `${selectedEarnings.epsSurprisePct >= 0 ? '+' : ''}${selectedEarnings.epsSurprisePct.toFixed(1)}%`
+                      : 'N/A'}
+                  </span>
+                  <span className="text-[#8b9bb4] text-[9px] block">
+                    {(selectedEarnings.epsSurprisePct ?? 0) >= 0 ? 'BEAT CONSENSUS' : 'MISSED CONSENSUS'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[#8b9bb4] block text-[9px]">REVENUE</span>
+                  <span className="text-white font-extrabold text-sm">
+                    {selectedEarnings.reportedRev ?? selectedEarnings.consensusRev ?? 'Pending'}
+                  </span>
+                  <span className="text-[#8b9bb4] text-[9px] block">
+                    Est: {selectedEarnings.consensusRev ?? 'N/A'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[#8b9bb4] block text-[9px]">DAY-1 STOCK MOVE</span>
+                  <span
+                    className={`font-black text-sm ${
+                      (selectedEarnings.stockReactionPct ?? 0) >= 0 ? 'text-[#00e676]' : 'text-[#ff334b]'
+                    }`}
+                  >
+                    {selectedEarnings.stockReactionPct !== undefined
+                      ? `${selectedEarnings.stockReactionPct >= 0 ? '+' : ''}${selectedEarnings.stockReactionPct.toFixed(1)}%`
+                      : 'Pending'}
+                  </span>
+                  <span className="text-[#8b9bb4] text-[9px] block">
+                    Actual Realization
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[#8b9bb4] block text-[9px]">IMPLIED STRADDLE</span>
+                  <span className="text-[#fbbf24] font-black text-sm">
+                    ±{selectedEarnings.impliedMovePct}%
+                  </span>
+                  <span className="text-[#8b9bb4] text-[9px] block">
+                    {selectedEarnings.actualMovePct !== undefined
+                      ? Math.abs(selectedEarnings.actualMovePct) <= selectedEarnings.impliedMovePct
+                        ? 'OVERPRICED (Condor Win)'
+                        : 'UNDERPRICED (Straddle Win)'
+                      : 'Market Maker Move'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[#8b9bb4] block text-[9px]">IV CRUSH DYNAMICS</span>
+                  <span className="text-[#00e5ff] font-black text-sm">
+                    {selectedEarnings.ivCrushPts !== undefined
+                      ? `${selectedEarnings.ivCrushPts} pts`
+                      : 'Spike Phase'}
+                  </span>
+                  <span className="text-[#8b9bb4] text-[9px] block">
+                    {selectedEarnings.preEarningsIv !== undefined
+                      ? `${selectedEarnings.preEarningsIv}% → ${selectedEarnings.postEarningsIv}%`
+                      : 'Elevated Pre-Print'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                <div className="bg-[#080d16] p-2.5 rounded border border-[#1e2638]">
+                  <span className="text-[#fbbf24] font-bold text-[10px] block mb-1">
+                    MANAGEMENT GUIDANCE &amp; CATALYSTS
+                  </span>
+                  <p className="text-[#cbd5e1] text-[11px] leading-relaxed">
+                    {selectedEarnings.guidanceSummary}
+                  </p>
+                </div>
+
+                <div className="bg-[#080d16] p-2.5 rounded border border-[#1e2638]">
+                  <span className="text-[#00e5ff] font-bold text-[10px] block mb-1">
+                    OPTIONS MARKET VOLATILITY &amp; PRICING EFFICIENCY
+                  </span>
+                  <p className="text-[#94a3b8] text-[11px] leading-relaxed">
+                    {selectedEarnings.volatilityNote}
+                  </p>
+                </div>
               </div>
             </div>
           )}

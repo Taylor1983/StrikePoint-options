@@ -54,6 +54,7 @@ interface OptionsMatrixOMONProps {
   onOpenQuadWitching?: () => void;
   onOpenOptionsExpiration?: () => void;
   onOpenTSXFuturesHub?: () => void;
+  onOpenFuturesTermStructure?: () => void;
   onUpdatePosition?: (position: Position) => void;
 }
 
@@ -90,6 +91,7 @@ export const OptionsMatrixOMON: React.FC<OptionsMatrixOMONProps> = ({
   onOpenQuadWitching,
   onOpenOptionsExpiration,
   onOpenTSXFuturesHub,
+  onOpenFuturesTermStructure,
 }) => {
   // Strikes filter controls
   const [strikeCountFilter, setStrikeCountFilter] = useState<'12' | '20' | '32' | '48' | 'all'>('all');
@@ -1279,6 +1281,19 @@ export const OptionsMatrixOMON: React.FC<OptionsMatrixOMONProps> = ({
                 >
                   <Flame className="w-3.5 h-3.5 animate-pulse text-[#ff9900]" />
                   <span>OPEC+ &amp; CRUDE IV DYNAMICS</span>
+                </button>
+              )}
+              {onOpenFuturesTermStructure && (
+                <button
+                  onClick={() => {
+                    playKeyClick();
+                    onOpenFuturesTermStructure();
+                  }}
+                  className="px-2.5 py-1 rounded bg-[#ff9900]/20 hover:bg-[#ff9900]/30 text-[#ff9900] border border-[#ff9900]/50 font-black text-[10px] transition-all flex items-center gap-1.5 shadow-[0_0_8px_rgba(255,153,0,0.2)]"
+                  title="Analyze forward curve, contango/backwardation, and roll yields for futures contracts <FTS>"
+                >
+                  <TrendingUp className="w-3.5 h-3.5 text-[#ff9900]" />
+                  <span>FUTURES TERM STRUCTURE (FTS)</span>
                 </button>
               )}
               {onOpenStockTrade && (

@@ -5,9 +5,14 @@ import { Terminal, X, ExternalLink, HelpCircle, Keyboard, BookOpen } from 'lucid
 interface HelpTerminalModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigateToEducation?: () => void;
 }
 
-export const HelpTerminalModal: React.FC<HelpTerminalModalProps> = ({ isOpen, onClose }) => {
+export const HelpTerminalModal: React.FC<HelpTerminalModalProps> = ({
+  isOpen,
+  onClose,
+  onNavigateToEducation,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -31,6 +36,31 @@ export const HelpTerminalModal: React.FC<HelpTerminalModalProps> = ({ isOpen, on
         </div>
 
         <div className="p-5 max-h-[80vh] overflow-y-auto flex flex-col gap-4 text-[#cbd5e1]">
+          {/* Options Education Masterclass Link Banner */}
+          {onNavigateToEducation && (
+            <div className="bg-gradient-to-r from-[#ff9900]/20 via-[#ff9900]/10 to-transparent border border-[#ff9900] rounded-lg p-3 flex items-center justify-between gap-3 shadow-[0_0_15px_rgba(255,153,0,0.2)]">
+              <div>
+                <div className="flex items-center gap-1.5 text-[#ff9900] font-black text-xs mb-0.5">
+                  <BookOpen className="w-4 h-4" />
+                  <span>OPTIONS ACADEMY &amp; MASTERCLASS &lt;EDUC&gt;</span>
+                </div>
+                <p className="text-[10.5px] text-[#cbd5e1]">
+                  Explore interactive strategy risk profiles, volatility skews, binary event IV crush, probability pricing, Greeks term structure, and over/undervaluation diagnostics.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  playKeyClick();
+                  onClose();
+                  onNavigateToEducation();
+                }}
+                className="px-3 py-1.5 bg-[#ff9900] hover:bg-[#e68a00] text-black font-black rounded text-[11px] whitespace-nowrap cursor-pointer transition-all shadow"
+              >
+                OPEN ACADEMY
+              </button>
+            </div>
+          )}
+
           {/* Introduction */}
           <div className="bg-[#0b0f1a] border border-[#1e2638] rounded p-3">
             <h4 className="text-[#ff9900] font-black text-xs mb-1">
@@ -38,7 +68,7 @@ export const HelpTerminalModal: React.FC<HelpTerminalModalProps> = ({ isOpen, on
             </h4>
             <p className="text-[11px] text-[#8b9bb4] leading-relaxed">
               Type any command into the prompt bar at the top and press <strong className="text-[#ff9900]">{'<GO>'}</strong> (or hit Enter).
-              For example, type <strong className="text-white">NVDA OMON</strong> to pull up NVIDIA's options chain, or <strong className="text-white">PORT</strong> to inspect your open positions blotter.
+              For example, type <strong className="text-white">NVDA OMON</strong> to pull up NVIDIA's options chain, or <strong className="text-white">EDUC</strong> to launch the Options Academy.
             </p>
           </div>
 

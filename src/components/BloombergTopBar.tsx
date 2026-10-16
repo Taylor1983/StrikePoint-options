@@ -309,6 +309,59 @@ export const BloombergTopBar: React.FC<BloombergTopBarProps> = ({
     ) {
       onNavigateScreen('bnn');
     } else if (
+      trimmed === 'FTS' ||
+      trimmed === 'TERM' ||
+      trimmed === 'CURV' ||
+      trimmed === 'CURVE' ||
+      trimmed === 'FUTURES' ||
+      trimmed === 'FORWARD' ||
+      trimmed === 'FORWARD CURVE' ||
+      trimmed === 'CONTANGO' ||
+      trimmed === 'BACKWARDATION' ||
+      trimmed.includes('TERM STRUCTURE') ||
+      trimmed.includes('FORWARD CURVE') ||
+      trimmed.includes('FUTURES CURVE')
+    ) {
+      onNavigateScreen('fts');
+    } else if (
+      trimmed === 'SKEW' ||
+      trimmed === 'VSKEW' ||
+      trimmed === 'SKWF' ||
+      trimmed === 'SKEWFINDER' ||
+      trimmed === 'FINDER' ||
+      trimmed === 'VOLSKEW' ||
+      trimmed === 'SKEW FINDER' ||
+      trimmed.includes('SKEW FINDER') ||
+      trimmed.includes('VOLATILITY SKEW')
+    ) {
+      onNavigateScreen('skew');
+    } else if (
+      trimmed === 'JRNL' ||
+      trimmed === 'JOURNAL' ||
+      trimmed === 'TRADE JOURNAL' ||
+      trimmed === 'STRATEGY JOURNAL' ||
+      trimmed === 'STRATEGY TRADE JOURNAL' ||
+      trimmed === 'LOG' ||
+      trimmed === 'DIARY' ||
+      trimmed.includes('JOURNAL')
+    ) {
+      onNavigateScreen('journal');
+    } else if (
+      trimmed === 'EDUC' ||
+      trimmed === 'EDUCATION' ||
+      trimmed === 'ACADEMY' ||
+      trimmed === 'LEARN' ||
+      trimmed === 'SCHOOL' ||
+      trimmed === 'MASTERCLASS' ||
+      trimmed === 'TUTORIAL' ||
+      trimmed === 'OPTIONS EDUCATION' ||
+      trimmed === 'STRATEGY EDUCATION' ||
+      trimmed.includes('EDUCATION') ||
+      trimmed.includes('ACADEMY') ||
+      trimmed.includes('MASTERCLASS')
+    ) {
+      onNavigateScreen('educ');
+    } else if (
       trimmed === 'GIC' ||
       trimmed === 'GICS' && trimmed !== 'GICS' || // fallback
       trimmed === 'GIC CANADA' ||
@@ -406,6 +459,10 @@ export const BloombergTopBar: React.FC<BloombergTopBarProps> = ({
     { label: '<F12 OPEC>', key: 'OPEC', screen: 'opec' },
     { label: '<TRFF TARIFF>', key: 'TRFF', screen: 'tariff' },
     { label: '<VEGA VTS>', key: 'VEGA', screen: 'vega' },
+    { label: '<FTS CURVE>', key: 'FTS', screen: 'fts' },
+    { label: '<SKEW FINDER>', key: 'SKEW', screen: 'skew' },
+    { label: '<STRAT JRNL>', key: 'JRNL', screen: 'journal' },
+    { label: '<OPTIONS ACADEMY>', key: 'EDUC', screen: 'educ' },
     { label: '<DVD DIVIDENDS>', key: 'DVD', screen: 'div' },
     { label: '<GIC 100% CDIC>', key: 'GIC', screen: 'gic' },
     { label: '<WITCH 4W>', key: 'WITCH', action: onOpenQuadWitching || (() => onNavigateScreen('witch')), screen: 'witch' },
@@ -574,7 +631,7 @@ export const BloombergTopBar: React.FC<BloombergTopBarProps> = ({
                     <span className="text-[10px] text-[#8b9bb4]">${tickers[sym].price.toFixed(2)}</span>
                   </button>
                 ))}
-                {['OMON Options Monitor', 'STATEMENT Official Account Statement & Cash Ledger <STMT>', 'MONITOR Position & Margin Health Blotter', 'TSXF TSX Futures Hub & Montreal Exchange (MX)', 'SXF S&P/TSX 60 Index Standard Futures (MX)', 'TIME Exchange Clock, Time Zone & Opening/Closing Bell <BELL>', 'EXP Options Expiration Master Calendar & Schedule', 'WITCH Quadruple Witching Intelligence & Pin Risk', 'DOM Market Depth & Level 2 Book', 'OVME Options Valuation', 'DVD Dividend Tracker & DRIP Simulator', 'CANADIAN MARGIN Canadian Margin Health (CIRO 5300 & CRA)', 'SURF 3D Volatility Surface', 'VOLS Volatility Skews', 'HIVG Historical Volatility Graph', 'CHART / TA Technical Analysis (TECHO)', 'PCR Put/Call Ratio & Sentiment', 'FLOW Unusual Flow', 'SCEN Scenario Matrix', 'PORT Portfolio & Buying Power (BP)'].map(
+                {['SKEW Volatility Skew Finder & Arbitrage Scanner <SKWF>', 'FTS Futures Term Structure & Forward Curves <TERM>', 'OMON Options Monitor', 'STATEMENT Official Account Statement & Cash Ledger <STMT>', 'MONITOR Position & Margin Health Blotter', 'TSXF TSX Futures Hub & Montreal Exchange (MX)', 'SXF S&P/TSX 60 Index Standard Futures (MX)', 'TIME Exchange Clock, Time Zone & Opening/Closing Bell <BELL>', 'EXP Options Expiration Master Calendar & Schedule', 'WITCH Quadruple Witching Intelligence & Pin Risk', 'DOM Market Depth & Level 2 Book', 'OVME Options Valuation', 'DVD Dividend Tracker & DRIP Simulator', 'CANADIAN MARGIN Canadian Margin Health (CIRO 5300 & CRA)', 'SURF 3D Volatility Surface', 'VOLS Volatility Skews', 'HIVG Historical Volatility Graph', 'CHART / TA Technical Analysis (TECHO)', 'PCR Put/Call Ratio & Sentiment', 'FLOW Unusual Flow', 'SCEN Scenario Matrix', 'PORT Portfolio & Buying Power (BP)'].map(
                   (cmd) => (
                     <button
                       key={cmd}

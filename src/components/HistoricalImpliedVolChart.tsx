@@ -20,6 +20,11 @@ import {
   ArrowRight,
   Maximize2,
 } from 'lucide-react';
+import {
+  EarningsReport,
+  findEarningsForCandle,
+  getUpcomingEarnings,
+} from '../services/earningsData';
 
 interface HistoricalImpliedVolChartProps {
   ticker: Ticker;
@@ -47,6 +52,7 @@ export const HistoricalImpliedVolChart: React.FC<HistoricalImpliedVolChartProps>
   const [showHV10, setShowHV10] = useState(true);
   const [showHV60, setShowHV60] = useState(false);
   const [showPrice, setShowPrice] = useState(true);
+  const [showEarnings, setShowEarnings] = useState(true);
 
   // Estimator type: 'close' (Close-to-Close) vs 'parkinson' (Parkinson High-Low)
   const [estimator, setEstimator] = useState<'close' | 'parkinson'>('close');
@@ -59,6 +65,8 @@ export const HistoricalImpliedVolChart: React.FC<HistoricalImpliedVolChartProps>
 
   // Hover state
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [hoveredEarnings, setHoveredEarnings] = useState<EarningsReport | null>(null);
+  const [selectedEarnings, setSelectedEarnings] = useState<EarningsReport | null>(null);
 
   // Generate full historical volatility series
   const fullSeries = useMemo(() => {
@@ -73,6 +81,22 @@ export const HistoricalImpliedVolChart: React.FC<HistoricalImpliedVolChartProps>
     if (timeframe === '6M') return fullSeries.slice(-130);
     return fullSeries; // 1Y
   }, [fullSeries, timeframe]);
+
+  // Corporate Earnings intersecting the volatility series
+  const earningsInSeries = useMemo(() => {
+    const list: { report: EarningsReport; index: number; point: VolDataPoint }[] = [];
+    series.forEach((pt, idx) => {
+      const match = findEarningsForCandle(pt.date, ticker.symbol);
+      if (match) {
+        list.push({ report: match, index: idx, point: pt });
+      }
+    });
+    return list;
+  }, [series, ticker.symbol]);
+
+  const upcomingEarnings = useMemo(() => {
+    return getUpcomingEarnings(ticker.symbol);
+  }, [ticker.symbol]);
 
   // Quantitative Stats Summary
   const stats = useMemo(() => {
@@ -604,6 +628,21 @@ export const HistoricalImpliedVolChart: React.FC<HistoricalImpliedVolChartProps>
                 <span className="text-[#8b9bb4]">Stock Price</span>
                 <span className="text-[#94a3b8] font-bold">${activePoint.price.toFixed(2)}</span>
               </label>
+
+              {/* Earnings Events */}
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showEarnings}
+                  onChange={(e) => {
+                    playKeyClick();
+                    setShowEarnings(e.target.checked);
+                  }}
+                  className="accent-[#fbbf24] rounded"
+                />
+                <span className="w-3 h-1 bg-[#fbbf24] inline-block rounded-full" />
+                <span className="text-[#fbbf24] font-bold">[E] Earnings ({earningsInSeries.length})</span>
+              </label>
             </div>
 
             {/* Hovered Date & Spread Display */}
@@ -883,6 +922,104 @@ export const HistoricalImpliedVolChart: React.FC<HistoricalImpliedVolChartProps>
                   </>
                 )}
 
+                {/* ---------------- Earnings [E] Markers on Historical Vol Curve ---------------- */}
+                {showEarnings && (
+                  <g>
+                    {earningsInSeries.map((eItem, eIdx) => {
+                      const xCenter = getX(eItem.index);
+                      const isHovered = hoveredEarnings?.id === eItem.report.id;
+                      const isSelected = selectedEarnings?.id === eItem.report.id;
+                      const isBeat = eItem.report.resultType === 'BEAT';
+                      const isMiss = eItem.report.resultType === 'MISS';
+                      const pinColor = isBeat ? '#10b981' : isMiss ? '#ef4444' : '#fbbf24';
+
+                      return (
+                        <g
+                          key={`hivg-earn-${eIdx}`}
+                          onMouseEnter={() => setHoveredEarnings(eItem.report)}
+                          onMouseLeave={() => setHoveredEarnings(null)}
+                          onClick={() => {
+                            playKeyClick();
+                            setSelectedEarnings(isSelected ? null : eItem.report);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {/* Vertical Catalyst Line */}
+                          <line
+                            x1={xCenter}
+                            y1={chartPadding.top}
+                            x2={xCenter}
+                            y2={chartPadding.top + mainPlotHeight}
+                            stroke={pinColor}
+                            strokeWidth={isHovered || isSelected ? '2' : '1.2'}
+                            strokeDasharray="3 3"
+                            opacity={isHovered || isSelected ? '0.95' : '0.6'}
+                          />
+
+                          {/* Top Pin Badge */}
+                          <rect
+                            x={xCenter - 22}
+                            y={chartPadding.top - 2}
+                            width={44}
+                            height={16}
+                            rx="2"
+                            fill={isHovered || isSelected ? pinColor : '#090d18'}
+                            stroke={pinColor}
+                            strokeWidth="1.2"
+                          />
+                          <text
+                            x={xCenter}
+                            y={chartPadding.top + 9.5}
+                            fill={isHovered || isSelected ? '#000000' : pinColor}
+                            fontSize="8"
+                            fontWeight="black"
+                            fontFamily="monospace"
+                            textAnchor="middle"
+                          >
+                            [E] {eItem.report.fiscalQuarter.split(' ')[0]}
+                          </text>
+
+                          {/* IV Crush Pts Tag Pill */}
+                          {eItem.report.ivCrushPts !== undefined && (
+                            <g>
+                              <rect
+                                x={xCenter - 26}
+                                y={chartPadding.top + 16}
+                                width={52}
+                                height={12}
+                                rx="2"
+                                fill="#00e5ff"
+                                opacity="0.9"
+                              />
+                              <text
+                                x={xCenter}
+                                y={chartPadding.top + 24.5}
+                                fill="#000000"
+                                fontSize="7"
+                                fontWeight="black"
+                                fontFamily="monospace"
+                                textAnchor="middle"
+                              >
+                                IV {eItem.report.ivCrushPts} pts
+                              </text>
+                            </g>
+                          )}
+
+                          {/* Target pip on IV curve */}
+                          <circle
+                            cx={xCenter}
+                            cy={getVolY(eItem.point.iv30)}
+                            r={isHovered || isSelected ? '5' : '3.5'}
+                            fill={pinColor}
+                            stroke="#05070a"
+                            strokeWidth="1.5"
+                          />
+                        </g>
+                      );
+                    })}
+                  </g>
+                )}
+
                 {/* ======================================================== */}
                 {/* SUB-CHART: VARIANCE RISK PREMIUM (IV - HV SPREAD)        */}
                 {/* ======================================================== */}
@@ -1014,6 +1151,57 @@ export const HistoricalImpliedVolChart: React.FC<HistoricalImpliedVolChartProps>
                   );
                 })()}
               </svg>
+
+              {/* Selected Earnings Report Popover / Drawer */}
+              {selectedEarnings && (
+                <div className="bg-[#121927] border border-[#fbbf24]/60 rounded p-3 mt-3 relative text-xs shadow-xl animate-in fade-in">
+                  <button
+                    onClick={() => setSelectedEarnings(null)}
+                    className="absolute top-2 right-2 text-[#8b9bb4] hover:text-white px-2 py-0.5 rounded bg-black/40 border border-[#2d3748]"
+                  >
+                    ✕ CLOSE
+                  </button>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-0.5 bg-[#fbbf24] text-black font-black rounded text-[10px]">
+                      [E] EARNINGS VOLATILITY
+                    </span>
+                    <span className="text-white font-black text-sm">
+                      {ticker.symbol} // {selectedEarnings.fiscalQuarter} Earnings &amp; Implied Vol Impact
+                    </span>
+                    <span className="text-[#8b9bb4] text-[11px] font-mono">
+                      Reported {selectedEarnings.displayDate} ({selectedEarnings.timing})
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-[#090d16] p-2 rounded border border-[#1e2638] my-2 text-[11px]">
+                    <div>
+                      <span className="text-[#8b9bb4] block text-[9px]">REPORTED EPS</span>
+                      <span className="text-white font-extrabold">{selectedEarnings.reportedEps !== undefined ? `$${selectedEarnings.reportedEps.toFixed(2)}` : 'Pending'}</span>
+                      <span className="text-[#8b9bb4] block text-[9px]">Cons: ${selectedEarnings.consensusEps.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#8b9bb4] block text-[9px]">DAY-1 STOCK MOVE</span>
+                      <span className={`font-black ${(selectedEarnings.stockReactionPct ?? 0) >= 0 ? 'text-[#00e676]' : 'text-[#ff334b]'}`}>
+                        {selectedEarnings.stockReactionPct !== undefined ? `${(selectedEarnings.stockReactionPct >= 0 ? '+' : '')}${selectedEarnings.stockReactionPct.toFixed(1)}%` : 'Pending'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#8b9bb4] block text-[9px]">IMPLIED STRADDLE</span>
+                      <span className="text-[#fbbf24] font-black">±{selectedEarnings.impliedMovePct}%</span>
+                    </div>
+                    <div>
+                      <span className="text-[#8b9bb4] block text-[9px]">IV CRUSH (PTS)</span>
+                      <span className="text-[#00e5ff] font-black">{selectedEarnings.ivCrushPts !== undefined ? `${selectedEarnings.ivCrushPts} pts` : '--'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#8b9bb4] block text-[9px]">PRE → POST IV</span>
+                      <span className="text-white font-bold">{selectedEarnings.preEarningsIv !== undefined ? `${selectedEarnings.preEarningsIv}% → ${selectedEarnings.postEarningsIv}%` : '--'}</span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-[#cbd5e1] leading-relaxed mt-1">
+                    {selectedEarnings.volatilityNote}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

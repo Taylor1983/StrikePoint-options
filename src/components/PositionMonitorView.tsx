@@ -34,6 +34,7 @@ import {
   Banknote,
   FileText,
   Briefcase,
+  BookOpen,
 } from 'lucide-react';
 import { AccountStatementView } from './AccountStatementView';
 import { PositionsPortfolioView } from './PositionsPortfolioView';
@@ -60,6 +61,7 @@ interface PositionMonitorViewProps {
   onResetAccount?: () => void;
   onSelectTicker?: (symbol: string) => void;
   onOpenCanadianSuite?: () => void;
+  onNavigateToJournal?: () => void;
   onSubTabChange?: (tab: MonitorSubTab) => void;
 }
 
@@ -82,6 +84,7 @@ export const PositionMonitorView: React.FC<PositionMonitorViewProps> = ({
   onResetAccount,
   onSelectTicker,
   onOpenCanadianSuite,
+  onNavigateToJournal,
   onSubTabChange,
 }) => {
   const [monitorSubTab, setMonitorSubTab] = useState<MonitorSubTab>(initialSubTab);
@@ -372,6 +375,23 @@ export const PositionMonitorView: React.FC<PositionMonitorViewProps> = ({
             {canadianAccounts.length}
           </span>
         </button>
+
+        {onNavigateToJournal && (
+          <button
+            onClick={() => {
+              playKeyClick();
+              onNavigateToJournal();
+            }}
+            className="px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all text-[#ff9900] bg-[#ff9900]/10 border border-[#ff9900]/30 hover:bg-[#ff9900]/25 hover:text-white"
+            title="Open Strategy Trade Journal & Execution Ledger <JRNL>"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>5. STRATEGY TRADE JOURNAL</span>
+            <span className="px-1 py-0.2 rounded bg-[#ff9900]/25 text-[#ff9900] text-[8.5px] font-mono">
+              &lt;JRNL&gt;
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="text-[10.5px] text-[#8b9bb4] flex items-center gap-2 font-mono">

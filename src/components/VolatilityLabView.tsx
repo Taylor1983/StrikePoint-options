@@ -40,6 +40,7 @@ interface VolatilityLabViewProps {
   onNavigateToCone?: () => void;
   onNavigateToValuation?: () => void;
   onNavigateToVega?: () => void;
+  onNavigateToSkewFinder?: () => void;
   onApplyStrategyTemplate?: (templateId: string) => void;
 }
 
@@ -115,6 +116,7 @@ export const VolatilityLabView: React.FC<VolatilityLabViewProps> = ({
   onNavigateToCone,
   onNavigateToValuation,
   onNavigateToVega,
+  onNavigateToSkewFinder,
   onApplyStrategyTemplate,
 }) => {
   // Ensure we have chains across all standard expirations
@@ -557,6 +559,20 @@ export const VolatilityLabView: React.FC<VolatilityLabViewProps> = ({
             <Activity className="w-3.5 h-3.5" />
             <span>HISTORICAL VS IMPLIED (HIVG)</span>
           </button>
+
+          {onNavigateToSkewFinder && (
+            <button
+              onClick={() => {
+                playKeyClick();
+                onNavigateToSkewFinder();
+              }}
+              className="px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all text-[#ff9900] bg-[#ff9900]/10 border border-[#ff9900]/30 hover:bg-[#ff9900]/20 hover:text-white"
+              title="Launch Quant Volatility Skew Finder & Arbitrage Scanner <SKEW>"
+            >
+              <Sliders className="w-3.5 h-3.5 text-[#ff9900]" />
+              <span>SKEW FINDER</span>
+            </button>
+          )}
         </div>
       </div>
 

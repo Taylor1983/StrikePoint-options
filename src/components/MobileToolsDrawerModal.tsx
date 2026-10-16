@@ -24,6 +24,8 @@ import {
   Flame,
   Download,
   Tv,
+  Sliders,
+  BookOpen,
 } from 'lucide-react';
 
 interface MobileToolsDrawerModalProps {
@@ -64,6 +66,7 @@ export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
       title: 'OPTIONS TRADING & CHAINS',
       items: [
         { label: 'OMON Options Monitor', code: 'omon' as TerminalScreen, icon: Layers, color: 'text-[#00d2ff]' },
+        { label: 'Options Academy (EDUC)', code: 'educ' as TerminalScreen, icon: BookOpen, color: 'text-[#facc15]' },
         { label: 'ETF & Company Profile (DES)', code: 'des' as TerminalScreen, icon: PieChart, color: 'text-[#00d2ff]' },
         { label: 'Quadruple Witching (WITCH)', code: 'witch' as TerminalScreen, icon: Flame, color: 'text-[#c084fc]' },
         { label: 'OVME Strategy Valuation', code: 'ovme' as TerminalScreen, icon: Calculator, color: 'text-[#ff9900]' },
@@ -86,9 +89,11 @@ export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
       title: 'VOLATILITY & GREEKS ENGINE',
       items: [
         { label: 'Volatility Skews (VOLS)', code: 'vols' as TerminalScreen, icon: Activity, color: 'text-[#38bdf8]' },
+        { label: 'Volatility Skew Finder (SKEW)', code: 'skew' as TerminalScreen, icon: Sliders, color: 'text-[#ff9900]' },
         { label: '3D Volatility Surface', code: 'surf' as TerminalScreen, icon: Globe, color: 'text-[#00d2ff]' },
         { label: 'Historical vs IV (HIVG)', code: 'hivg' as TerminalScreen, icon: BarChart2, color: 'text-[#10b981]' },
         { label: 'Vega Term Structure', code: 'vega' as TerminalScreen, icon: Layers, color: 'text-[#c084fc]' },
+        { label: 'Futures Term Structure (FTS)', code: 'fts' as TerminalScreen, icon: TrendingUp, color: 'text-[#ff9900]' },
         { label: 'Technical Chart / TA', code: 'chart' as TerminalScreen, icon: TrendingUp, color: 'text-[#43a047]' },
       ],
     },
@@ -109,6 +114,7 @@ export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
     {
       title: 'PORTFOLIO & REGULATORY SUITE',
       items: [
+        { label: 'Strategy Trade Journal (JRNL)', code: 'journal' as TerminalScreen, icon: BookOpen, color: 'text-[#ff9900]' },
         { label: 'Positions & Margin Monitor', code: 'monitor' as TerminalScreen, icon: Radio, color: 'text-[#38bdf8]' },
         { label: 'Official Account Statement', code: 'statement' as TerminalScreen, icon: FileText, color: 'text-[#ff9900]' },
         { label: 'Portfolio & Margin (PORT)', code: 'port' as TerminalScreen, icon: Briefcase, color: 'text-[#10b981]' },

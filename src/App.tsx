@@ -57,6 +57,11 @@ import { QuadrupleWitchingView } from './components/QuadrupleWitchingView';
 import { QuadrupleWitchingModal } from './components/QuadrupleWitchingModal';
 import { OptionsExpirationView } from './components/OptionsExpirationView';
 import { BNNLiveStreamingView } from './components/BNNLiveStreamingView';
+import { FuturesTermStructureView } from './components/FuturesTermStructureView';
+import { VolatilitySkewFinderView } from './components/VolatilitySkewFinderView';
+import { StrategyTradeJournalView } from './components/StrategyTradeJournalView';
+import { OptionsEducationView } from './components/OptionsEducationView';
+import { logTradeToJournal, closeJournalTrade } from './services/tradeJournalService';
 import { GICSCanadaView } from './components/GICSCanadaView';
 import { CompanyProfileView } from './components/CompanyProfileView';
 import { isTickerETF } from './services/companyAndEtfProfiles';
@@ -132,6 +137,7 @@ import {
   Type,
   Folder,
   BarChart2,
+  GraduationCap,
 } from 'lucide-react';
 import {
   loadPrivacySettings,
@@ -631,10 +637,13 @@ export default function App() {
       witch: `QUADRUPLE WITCHING INTELLIGENCE [${selectedTicker.symbol}]`,
       bnn: `BNN BLOOMBERG FREE LIVE BROADCAST & NEWS STREAM`,
       exp: `OPTIONS EXPIRATION CALENDAR & SCHEDULE [${selectedTicker.symbol}]`,
+      fts: `FUTURES TERM STRUCTURE & FORWARD CURVES [FTS]`,
       tsxf: `TSX & MONTREAL EXCHANGE FUTURES HUB`,
       gics: `GICS CANADA · 11 SECTORS & TSX COMPOSITE [GICS]`,
       gic: `GUARANTEED INVESTMENT CERTIFICATES (GIC) · CDIC 100% [GIC]`,
       des: `ETF FUNDAMENTALS & COMPANY PROFILE [${selectedTicker.symbol}] <DES>`,
+      skew: `VOLATILITY SKEW FINDER & ARBITRAGE SCANNER [${selectedTicker.symbol}] <SKEW>`,
+      journal: `STRATEGY TRADE JOURNAL & EXECUTION LEDGER [JRNL]`,
     };
 
     const newId = `pop-${screenToPop}-${Date.now()}`;
@@ -956,6 +965,44 @@ export default function App() {
       trimmed === 'LIVE'
     ) {
       setCurrentScreen('bnn');
+    } else if (
+      trimmed === 'FTS' ||
+      trimmed === 'TERM' ||
+      trimmed === 'CURV' ||
+      trimmed === 'CURVE' ||
+      trimmed === 'FUTURES' ||
+      trimmed === 'FORWARD' ||
+      trimmed === 'FORWARD CURVE' ||
+      trimmed === 'CONTANGO' ||
+      trimmed === 'BACKWARDATION' ||
+      trimmed.includes('TERM STRUCTURE') ||
+      trimmed.includes('FORWARD CURVE') ||
+      trimmed.includes('FUTURES CURVE')
+    ) {
+      setCurrentScreen('fts');
+    } else if (
+      trimmed === 'SKEW' ||
+      trimmed === 'VSKEW' ||
+      trimmed === 'SKWF' ||
+      trimmed === 'SKEWFINDER' ||
+      trimmed === 'FINDER' ||
+      trimmed === 'VOLSKEW' ||
+      trimmed === 'SKEW FINDER' ||
+      trimmed.includes('SKEW FINDER') ||
+      trimmed.includes('VOLATILITY SKEW')
+    ) {
+      setCurrentScreen('skew');
+    } else if (
+      trimmed === 'JRNL' ||
+      trimmed === 'JOURNAL' ||
+      trimmed === 'TRADE JOURNAL' ||
+      trimmed === 'STRATEGY JOURNAL' ||
+      trimmed === 'STRATEGY TRADE JOURNAL' ||
+      trimmed === 'LOG' ||
+      trimmed === 'DIARY' ||
+      trimmed.includes('JOURNAL')
+    ) {
+      setCurrentScreen('journal');
     } else if (
       trimmed.includes('DEFCON') ||
       trimmed.includes('DEFCONLEVEL') ||
@@ -1343,6 +1390,13 @@ export default function App() {
 
   // Order execution handler
   const handleExecuteTrade = (order: Order, position: Position) => {
+    // Automatically log trade into Strategy Trade Journal with execution stats & entry IV
+    try {
+      logTradeToJournal(order, position, tickers[position.ticker]);
+    } catch (e) {
+      console.error('Failed to log trade to journal:', e);
+    }
+
     setAccount((prev) => {
       const isDebit = order.netDebitCredit > 0;
       const newCash = isDebit
@@ -1360,6 +1414,13 @@ export default function App() {
 
   // Close position handler
   const handleClosePosition = (positionId: string) => {
+    // Automatically close trade in Strategy Trade Journal and record realized P&L
+    try {
+      closeJournalTrade(positionId);
+    } catch (e) {
+      console.error('Failed to close trade in journal:', e);
+    }
+
     // Check main account
     setAccount((prev) => {
       const targetPos = prev.positions.find((p) => p.id === positionId);
@@ -1519,6 +1580,7 @@ export default function App() {
             onOpenStrategyExecution={handleOpenStrategyExecution}
             onOpenQuadWitching={() => setIsQuadWitchingOpen(true)}
             onOpenOptionsExpiration={() => setCurrentScreen('exp')}
+            onOpenFuturesTermStructure={() => setCurrentScreen('fts')}
           />
 
           {builderLegs.length > 0 && (
@@ -1647,6 +1709,7 @@ export default function App() {
           onNavigateToCone={() => setCurrentScreen('cone')}
           onNavigateToValuation={() => setCurrentScreen('ovme')}
           onNavigateToVega={() => setCurrentScreen('vega')}
+          onNavigateToSkewFinder={() => setCurrentScreen('skew')}
           onApplyStrategyTemplate={handleApplyStrategyTemplate}
         />
       )}
@@ -1727,6 +1790,7 @@ export default function App() {
           onResetAccount={handleResetAccount}
           onSelectTicker={(sym) => setSelectedSymbol(sym)}
           onOpenCanadianSuite={() => setMonitorSubTab('tfsa_rrsp')}
+          onNavigateToJournal={() => setCurrentScreen('journal')}
         />
       )}
 
@@ -1842,6 +1906,67 @@ export default function App() {
         />
       )}
 
+
+      {/* SCREEN: FTS (Futures Term Structure, Forward Curves, Contango/Backwardation & Roll Yield) */}
+      {screenToRender === 'fts' && (
+        <FuturesTermStructureView
+          initialStructureId={selectedTicker.symbol.startsWith('/') ? selectedTicker.symbol.replace('/', '') : 'VIX'}
+          onNavigateToChain={(sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setCurrentScreen('omon');
+          }}
+          onOpenOrderTicket={(sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setIsStockTradeOpen(true);
+          }}
+          onNavigateToRisk={() => setCurrentScreen('risk')}
+          onNavigateToYieldCurve={() => setCurrentScreen('yc')}
+          onOpenTSXFuturesHub={() => setIsTSXFuturesHubOpen(true)}
+          onPopOut={() => handleOpenPopOut('fts')}
+        />
+      )}
+
+      {/* SCREEN: SKEW (Quant Volatility Skew Finder, 25-Delta Risk Reversal, Fly, Regime & Arbitrage Scanner) */}
+      {screenToRender === 'skew' && (
+        <VolatilitySkewFinderView
+          ticker={selectedTicker}
+          allChains={allChains}
+          positions={account.positions}
+          onSelectTicker={(sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+          }}
+          onNavigateToChain={() => setCurrentScreen('omon')}
+          onNavigateToSurface={() => setCurrentScreen('surf')}
+          onNavigateToCone={() => setCurrentScreen('cone')}
+          onNavigateToHIVG={() => setCurrentScreen('hivg')}
+          onNavigateToFTS={() => setCurrentScreen('fts')}
+          onApplyTrade={(opp) => {
+            if (tickers[opp.symbol]) setSelectedSymbol(opp.symbol);
+            setIsStrategyExecutionOpen(true);
+          }}
+        />
+      )}
+
+      {/* SCREEN: JOURNAL (Strategy Trade Journal, Execution Stats, Entry IV & P&L Excursion Engine) */}
+      {screenToRender === 'journal' && (
+        <StrategyTradeJournalView
+          currentTicker={selectedTicker}
+          allTickers={tickers}
+          positions={account.positions}
+          onNavigateToRisk={(legs, sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setBuilderLegs(legs);
+            setCurrentScreen('risk');
+          }}
+          onNavigateToChain={(sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setCurrentScreen('omon');
+          }}
+          onClosePosition={handleClosePosition}
+          onPopOut={() => handleOpenPopOut('journal')}
+        />
+      )}
+
       {/* SCREEN: EXP (Options Expiration Master Calendar, Term Structure & Settlement Rules) */}
       {screenToRender === 'exp' && (
         <OptionsExpirationView
@@ -1954,7 +2079,7 @@ export default function App() {
       {![
         'omon', 'ovme', 'risk', 'cone', 'scen', 'flow', 'vols', 'chart', 'port',
         'monitor', 'statement', 'hivg', 'surf', 'pcr', 'opec', 'tariff', 'defcon', 'vega',
-        'yc', 'macro', 'div', 'witch', 'bnn', 'exp', 'gics', 'gic', 'des'
+        'yc', 'macro', 'div', 'witch', 'bnn', 'exp', 'fts', 'gics', 'gic', 'des', 'skew', 'journal'
       ].includes(screenToRender) && (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
           <img
@@ -2852,6 +2977,42 @@ export default function App() {
             >
               <span className="w-2 h-2 rounded-full bg-[#ff3b30] animate-pulse inline-block mr-1.5" />
               BNN TV
+            </div>
+
+            <div
+              className={`tab ${currentScreen === 'fts' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('fts');
+              }}
+              title="Futures Term Structure, Forward Curves, Contango/Backwardation & Roll Yield <FTS>"
+            >
+              <TrendingUp className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
+              FTS CURVE
+            </div>
+
+            <div
+              className={`tab ${currentScreen === 'skew' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('skew');
+              }}
+              title="Volatility Skew Finder: 25-Delta Risk Reversal, Butterfly Wings, Skew Slope & Arbitrage Scanner <SKEW>"
+            >
+              <Sliders className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
+              SKEW FINDER
+            </div>
+
+            <div
+              className={`tab ${currentScreen === 'journal' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('journal');
+              }}
+              title="Strategy Trade Journal: Automated Execution Ledger, Entry IV & P&L Excursions <JRNL>"
+            >
+              <BookOpen className="w-3 h-3 inline-block mr-1 text-[#ff9900]" />
+              STRAT JRNL
             </div>
 
             {/* Pop-Out Screen Button */}
