@@ -27,9 +27,12 @@ import {
   Bell,
   Volume2,
   Music,
+  Globe,
+  Clock,
 } from 'lucide-react';
 import { playKeyClick, playExecutionChime } from '../utils/terminalSound';
 import { SoundSelectorSettings } from './SoundSelectorSettings';
+import { TIME_ZONE_OPTIONS } from './ExchangeClockBellModal';
 
 export type DisplayDensity = 'compact' | 'standard' | 'touch';
 export type TextLegibility = 'standard' | 'large' | 'xlarge';
@@ -57,6 +60,11 @@ export interface DisplaySettingsModalProps {
   onToggleAutoFit?: () => void;
   onOpenPrivacySuite?: () => void;
   initialTab?: 'display' | 'audio' | 'device';
+  timeZoneId?: string;
+  onSelectTimeZoneId?: (tzId: string) => void;
+  useAmPm?: boolean;
+  onToggleUseAmPm?: (useAmPm: boolean) => void;
+  onOpenClockBellModal?: () => void;
 }
 
 export const DisplaySettingsModal: React.FC<DisplaySettingsModalProps> = ({
@@ -81,6 +89,11 @@ export const DisplaySettingsModal: React.FC<DisplaySettingsModalProps> = ({
   onToggleAutoFit,
   onOpenPrivacySuite,
   initialTab = 'display',
+  timeZoneId = 'et',
+  onSelectTimeZoneId,
+  useAmPm = true,
+  onToggleUseAmPm,
+  onOpenClockBellModal,
 }) => {
   const [activeTab, setActiveTab] = React.useState<'display' | 'audio' | 'device'>(initialTab);
 
@@ -641,6 +654,144 @@ export const DisplaySettingsModal: React.FC<DisplaySettingsModalProps> = ({
                 >
                   {isSidebarOpen ? 'COLLAPSE SIDEBAR' : 'EXPAND SIDEBAR'}
                 </button>
+              </div>
+
+              {/* Time Zone & Exchange Clocks Preference Section */}
+              <div className="bg-[#0e1628] border border-[#ff9900]/30 rounded-lg p-3.5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1b263b] pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-[#ff9900]/20 rounded text-[#ff9900]">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-extrabold text-white text-xs block">
+                        EXCHANGE TIME ZONE &amp; MARKET CLOCK
+                      </span>
+                      <span className="text-[10px] text-[#8b9bb4]">
+                        Set terminal reference clock for market open/close, order timestamps, and chart tenors.
+                      </span>
+                    </div>
+                  </div>
+
+                  {onOpenClockBellModal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playKeyClick();
+                        onOpenClockBellModal();
+                      }}
+                      className="px-2.5 py-1 rounded bg-[#ff9900]/15 hover:bg-[#ff9900]/25 text-[#ff9900] border border-[#ff9900]/40 text-[10.5px] font-bold flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>BELL CONTROLLER &rarr;</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Switch Buttons for Major Financial Hubs */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-[#8c9bb4] uppercase tracking-wider block">
+                    1-CLICK TIME ZONE SELECT:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5">
+                    {[
+                      { id: 'et', label: 'ET', name: 'New York / TSX' },
+                      { id: 'ct', label: 'CT', name: 'Chicago CME' },
+                      { id: 'pt', label: 'PT', name: 'San Francisco' },
+                      { id: 'utc', label: 'UTC', name: 'Universal' },
+                      { id: 'lon', label: 'LON', name: 'London LSE' },
+                      { id: 'fra', label: 'CET', name: 'Frankfurt' },
+                      { id: 'tok', label: 'JST', name: 'Tokyo JPX' },
+                      { id: 'mum', label: 'IST', name: 'Mumbai NSE' },
+                    ].map((hub) => {
+                      const isSelected = timeZoneId === hub.id;
+                      return (
+                        <button
+                          key={hub.id}
+                          type="button"
+                          onClick={() => {
+                            playKeyClick();
+                            if (onSelectTimeZoneId) onSelectTimeZoneId(hub.id);
+                          }}
+                          className={`p-1.5 rounded text-left border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#ff9900]/20 border-[#ff9900] text-white shadow-sm'
+                              : 'bg-[#121927] border-[#1f2a40] text-[#8c9bb4] hover:text-white hover:border-[#38bdf8]/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`font-mono text-[10px] font-black ${isSelected ? 'text-[#ff9900]' : 'text-white'}`}>
+                              {hub.label}
+                            </span>
+                            {isSelected && <Check className="w-2.5 h-2.5 text-[#00e676]" />}
+                          </div>
+                          <div className="text-[8px] truncate text-[#8c9bb4] mt-0.5">
+                            {hub.name}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Full Dropdown & 12h/24h Format Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="text-[10px] font-bold text-[#8c9bb4] uppercase tracking-wider block mb-1">
+                      ALL AVAILABLE GLOBAL TIME ZONES:
+                    </label>
+                    <select
+                      value={timeZoneId}
+                      onChange={(e) => {
+                        playKeyClick();
+                        if (onSelectTimeZoneId) onSelectTimeZoneId(e.target.value);
+                      }}
+                      className="w-full bg-[#121927] border border-[#23334d] hover:border-[#ff9900] text-[#00e676] font-mono font-bold text-xs rounded px-2.5 py-1.5 outline-none cursor-pointer"
+                    >
+                      {TIME_ZONE_OPTIONS.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label} · {opt.name} ({opt.region})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-[#8c9bb4] uppercase tracking-wider block mb-1">
+                      TIME DISPLAY FORMAT:
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playKeyClick();
+                          if (onToggleUseAmPm) onToggleUseAmPm(true);
+                        }}
+                        className={`flex-1 py-1.5 px-2 rounded font-bold text-xs border transition-all ${
+                          useAmPm
+                            ? 'bg-[#00d2ff] text-black border-[#00d2ff] font-extrabold'
+                            : 'bg-[#121927] text-[#8c9bb4] border-[#222d42] hover:text-white'
+                        }`}
+                      >
+                        12-HR (AM / PM)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playKeyClick();
+                          if (onToggleUseAmPm) onToggleUseAmPm(false);
+                        }}
+                        className={`flex-1 py-1.5 px-2 rounded font-bold text-xs border transition-all ${
+                          !useAmPm
+                            ? 'bg-[#00d2ff] text-black border-[#00d2ff] font-extrabold'
+                            : 'bg-[#121927] text-[#8c9bb4] border-[#222d42] hover:text-white'
+                        }`}
+                      >
+                        24-HR (MILITARY)
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
           )}

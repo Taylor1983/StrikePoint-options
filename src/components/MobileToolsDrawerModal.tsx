@@ -26,6 +26,8 @@ import {
   Tv,
   Sliders,
   BookOpen,
+  Clock,
+  Bell,
 } from 'lucide-react';
 
 interface MobileToolsDrawerModalProps {
@@ -39,6 +41,8 @@ interface MobileToolsDrawerModalProps {
   onOpenStrategyExecution: () => void;
   onOpenMarketDepth: () => void;
   onOpenStockTrade: () => void;
+  onOpenClockBellModal?: () => void;
+  timeZoneId?: string;
 }
 
 export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
@@ -52,6 +56,8 @@ export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
   onOpenStrategyExecution,
   onOpenMarketDepth,
   onOpenStockTrade,
+  onOpenClockBellModal,
+  timeZoneId = 'et',
 }) => {
   if (!isOpen) return null;
 
@@ -119,6 +125,15 @@ export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
         { label: 'Official Account Statement', code: 'statement' as TerminalScreen, icon: FileText, color: 'text-[#ff9900]' },
         { label: 'Portfolio & Margin (PORT)', code: 'port' as TerminalScreen, icon: Briefcase, color: 'text-[#10b981]' },
         { label: 'Canadian CIRO & CRA Suite', action: () => { onOpenCanadianSuite(); onClose(); }, icon: FileText, color: 'text-[#ff334b]' },
+        {
+          label: `Exchange Clock & Time Zone (${timeZoneId.toUpperCase()})`,
+          action: () => {
+            if (onOpenClockBellModal) onOpenClockBellModal();
+            onClose();
+          },
+          icon: Clock,
+          color: 'text-[#ffd600]',
+        },
       ],
     },
   ];
@@ -145,18 +160,30 @@ export const MobileToolsDrawerModal: React.FC<MobileToolsDrawerModalProps> = ({
           </button>
         </div>
 
-        {/* Device Switcher Quick Strip */}
-        <div className="px-3 py-2 bg-[#080c14] border-b border-[#1e293b] flex items-center justify-between">
+        {/* Quick Action Strip (PWA + Time Zone) */}
+        <div className="px-3 py-2 bg-[#080c14] border-b border-[#1e293b] grid grid-cols-2 gap-2">
           <button
             onClick={() => {
               playKeyClick();
               onOpenDeviceSuite();
               onClose();
             }}
-            className="w-full py-2 px-3 bg-[#00d2ff]/10 hover:bg-[#00d2ff]/20 text-[#00d2ff] border border-[#00d2ff]/30 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
+            className="py-2 px-2.5 bg-[#00d2ff]/10 hover:bg-[#00d2ff]/20 text-[#00d2ff] border border-[#00d2ff]/30 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1.5 truncate"
           >
-            <Smartphone className="w-4 h-4" />
-            MULTI-PLATFORM &amp; PWA INSTALLATION SUITE
+            <Smartphone className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">MULTI-DEVICE SUITE</span>
+          </button>
+
+          <button
+            onClick={() => {
+              playKeyClick();
+              if (onOpenClockBellModal) onOpenClockBellModal();
+              onClose();
+            }}
+            className="py-2 px-2.5 bg-[#ff9900]/10 hover:bg-[#ff9900]/20 text-[#ff9900] border border-[#ff9900]/30 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1.5 truncate"
+          >
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">TIME ZONE: {timeZoneId.toUpperCase()}</span>
           </button>
         </div>
 

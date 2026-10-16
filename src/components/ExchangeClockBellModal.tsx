@@ -11,7 +11,8 @@ import {
   Play,
   RotateCcw,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Search,
 } from 'lucide-react';
 import { playOpeningBell, playClosingBell, playKeyClick } from '../utils/terminalSound';
 
@@ -20,22 +21,30 @@ export interface TimeZoneOption {
   name: string;
   zone: string;
   label: string;
-  region: string;
+  region: 'North America' | 'Europe' | 'Asia-Pacific' | 'Global' | 'Device' | 'Latin America' | 'Middle East';
   market: string;
 }
 
 export const TIME_ZONE_OPTIONS: TimeZoneOption[] = [
   { id: 'et', name: 'US / Eastern (New York / Toronto)', zone: 'America/New_York', label: 'ET', region: 'North America', market: 'NYSE · NASDAQ · TSX (09:30 AM - 04:00 PM)' },
   { id: 'ct', name: 'US / Central (Chicago)', zone: 'America/Chicago', label: 'CT', region: 'North America', market: 'CME · CBOT (Futures Pit)' },
-  { id: 'pt', name: 'US / Pacific (Los Angeles / SF)', zone: 'America/Los_Angeles', label: 'PT', region: 'North America', market: 'West Coast Standard' },
-  { id: 'mt', name: 'US / Mountain (Denver)', zone: 'America/Denver', label: 'MT', region: 'North America', market: 'Mountain Standard' },
+  { id: 'pt', name: 'US / Pacific (Los Angeles / SF / Vancouver)', zone: 'America/Los_Angeles', label: 'PT', region: 'North America', market: 'West Coast Standard' },
+  { id: 'mt', name: 'US / Mountain (Denver / Calgary)', zone: 'America/Denver', label: 'MT', region: 'North America', market: 'Mountain Standard' },
   { id: 'at', name: 'Canada / Atlantic (Halifax)', zone: 'America/Halifax', label: 'AT', region: 'North America', market: 'Atlantic Standard' },
-  { id: 'utc', name: 'UTC / Universal Time', zone: 'UTC', label: 'UTC', region: 'Global', market: 'Benchmark Time Reference' },
-  { id: 'lon', name: 'Europe / London (LSE)', zone: 'Europe/London', label: 'LON', region: 'Europe', market: 'London Stock Exchange' },
+  { id: 'utc', name: 'UTC / GMT (Universal Coordinated Time)', zone: 'UTC', label: 'UTC', region: 'Global', market: 'Global Derivatives & FX Benchmark' },
+  { id: 'lon', name: 'Europe / London (LSE)', zone: 'Europe/London', label: 'LON', region: 'Europe', market: 'London Stock Exchange (08:00 - 16:30 GMT)' },
   { id: 'fra', name: 'Europe / Frankfurt (XETRA)', zone: 'Europe/Frankfurt', label: 'CET', region: 'Europe', market: 'Deutsche Börse · Eurex' },
-  { id: 'tok', name: 'Asia / Tokyo (JPX)', zone: 'Asia/Tokyo', label: 'JST', region: 'Asia', market: 'Tokyo Stock Exchange' },
-  { id: 'hk', name: 'Asia / Hong Kong (HKEX)', zone: 'Asia/Hong_Kong', label: 'HKT', region: 'Asia', market: 'Hong Kong Exchanges' },
-  { id: 'local', name: 'Local Device System Time', zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York', label: 'LOC', region: 'Device', market: 'Local Operating System Clock' },
+  { id: 'par', name: 'Europe / Paris (Euronext)', zone: 'Europe/Paris', label: 'CET', region: 'Europe', market: 'Euronext Paris · CAC 40' },
+  { id: 'zur', name: 'Europe / Zurich (SIX)', zone: 'Europe/Zurich', label: 'CHF', region: 'Europe', market: 'SIX Swiss Exchange' },
+  { id: 'tok', name: 'Asia / Tokyo (JPX)', zone: 'Asia/Tokyo', label: 'JST', region: 'Asia-Pacific', market: 'Tokyo Stock Exchange (09:00 - 15:30 JST)' },
+  { id: 'hk', name: 'Asia / Hong Kong (HKEX)', zone: 'Asia/Hong_Kong', label: 'HKT', region: 'Asia-Pacific', market: 'Hong Kong Exchanges & Clearing' },
+  { id: 'sg', name: 'Asia / Singapore (SGX)', zone: 'Asia/Singapore', label: 'SGT', region: 'Asia-Pacific', market: 'Singapore Exchange Derivatives' },
+  { id: 'mum', name: 'Asia / Mumbai (NSE / BSE)', zone: 'Asia/Kolkata', label: 'IST', region: 'Asia-Pacific', market: 'National Stock Exchange of India · NIFTY' },
+  { id: 'sha', name: 'Asia / Shanghai (SSE)', zone: 'Asia/Shanghai', label: 'CST', region: 'Asia-Pacific', market: 'Shanghai Stock Exchange (09:30 - 15:00 CST)' },
+  { id: 'syd', name: 'Australia / Sydney (ASX)', zone: 'Australia/Sydney', label: 'AEST', region: 'Asia-Pacific', market: 'Australian Securities Exchange' },
+  { id: 'dxb', name: 'Middle East / Dubai (DFM / DIFC)', zone: 'Asia/Dubai', label: 'GST', region: 'Middle East', market: 'Dubai Financial Market' },
+  { id: 'br', name: 'South America / São Paulo (B3)', zone: 'America/Sao_Paulo', label: 'BRT', region: 'Latin America', market: 'B3 Brasil Bolsa Balcão' },
+  { id: 'local', name: 'Local Operating System Time', zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York', label: 'LOC', region: 'Device', market: 'Local Machine Operating Clock' },
 ];
 
 interface ExchangeClockBellModalProps {
@@ -61,6 +70,8 @@ export const ExchangeClockBellModal: React.FC<ExchangeClockBellModalProps> = ({
 }) => {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [lastRung, setLastRung] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('ALL');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -295,12 +306,76 @@ export const ExchangeClockBellModal: React.FC<ExchangeClockBellModalProps> = ({
           )}
         </div>
 
-        {/* TIME ZONE SELECTOR GRID */}
+        {/* WORLD FINANCIAL CENTERS QUICK BAR */}
+        <div className="p-3 bg-[#0d121e] border-b border-[#1b2538]">
+          <div className="text-[10px] text-[#8c9bb4] uppercase tracking-wider font-bold mb-2 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-white">
+              <Globe className="w-3.5 h-3.5 text-[#00d2ff]" />
+              <span>MAJOR FINANCIAL MARKET CENTERS (1-CLICK SELECT)</span>
+            </span>
+            <span className="text-[#ffd600]">Live Market Clocks</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {[
+              { id: 'et', city: 'NEW YORK', sub: 'NYSE/TSX', code: 'ET' },
+              { id: 'ct', city: 'CHICAGO', sub: 'CME Pits', code: 'CT' },
+              { id: 'pt', city: 'PACIFIC', sub: 'SF / LA', code: 'PT' },
+              { id: 'utc', city: 'UTC / GMT', sub: 'Global Benchmark', code: 'UTC' },
+              { id: 'lon', city: 'LONDON', sub: 'LSE / FTSE', code: 'LON' },
+              { id: 'fra', city: 'FRANKFURT', sub: 'XETRA / DAX', code: 'CET' },
+              { id: 'tok', city: 'TOKYO', sub: 'JPX / NIKKEI', code: 'JST' },
+              { id: 'mum', city: 'MUMBAI', sub: 'NSE / NIFTY', code: 'IST' },
+            ].map((hub) => {
+              const opt = TIME_ZONE_OPTIONS.find((t) => t.id === hub.id);
+              if (!opt) return null;
+              const isSelected = selectedTimeZoneId === hub.id;
+              const hubTime = currentTime.toLocaleTimeString('en-US', {
+                timeZone: opt.zone,
+                hour12: useAmPm,
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+
+              return (
+                <button
+                  key={hub.id}
+                  onClick={() => {
+                    playKeyClick();
+                    onSelectTimeZoneId(hub.id);
+                  }}
+                  className={`p-2 rounded border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-[#ff9900]/15 border-[#ff9900] shadow-[0_0_10px_rgba(255,153,0,0.3)]'
+                      : 'bg-[#080b12] border-[#1e273a] hover:border-[#8c9bb4] hover:bg-[#121927]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[9.5px] font-black ${isSelected ? 'text-[#ff9900]' : 'text-white'}`}>
+                      {hub.city}
+                    </span>
+                    <span className="text-[8.5px] px-1 rounded bg-[#1e293b] text-[#8c9bb4] font-bold">
+                      {hub.code}
+                    </span>
+                  </div>
+                  <div className="font-mono font-bold text-xs text-[#00e676] my-1">
+                    {hubTime}
+                  </div>
+                  <div className="text-[8.5px] text-[#8c9bb4] truncate">
+                    {hub.sub}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* TIME ZONE SELECTOR GRID & SEARCH CONTROLS */}
         <div className="p-4 bg-[#0a0d14] flex-1 overflow-y-auto space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-wide">
               <Globe className="w-3.5 h-3.5 text-[#00d2ff]" />
-              <span>SELECT FINANCIAL MARKET TIME ZONE</span>
+              <span>ALL FINANCIAL TIME ZONES ({TIME_ZONE_OPTIONS.length})</span>
             </span>
 
             {/* AM/PM vs 24-HR TOGGLE */}
@@ -335,8 +410,68 @@ export const ExchangeClockBellModal: React.FC<ExchangeClockBellModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {TIME_ZONE_OPTIONS.map((opt) => {
+          {/* Search Box and Region Filter Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-[#8c9bb4]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search city, country, or code (e.g. London, Chicago, JST, UTC)..."
+                className="w-full bg-[#06080e] border border-[#1e273a] focus:border-[#ff9900] rounded pl-8 pr-2.5 py-1 text-xs text-white placeholder-[#556782] outline-none font-mono"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1.5 text-xs text-[#8c9bb4] hover:text-white"
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+
+            {/* Region Tabs */}
+            <div className="flex items-center gap-1 text-[9.5px]">
+              {['ALL', 'North America', 'Europe', 'Asia-Pacific', 'Global'].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => {
+                    playKeyClick();
+                    setSelectedRegion(r);
+                  }}
+                  className={`px-2 py-1 rounded font-bold transition-colors ${
+                    selectedRegion === r
+                      ? 'bg-[#00d2ff] text-black font-black'
+                      : 'bg-[#141b2a] text-[#8c9bb4] hover:text-white'
+                  }`}
+                >
+                  {r.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Filtered Grid of Time Zones */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[340px] overflow-y-auto pr-1">
+            {TIME_ZONE_OPTIONS.filter((opt) => {
+              if (selectedRegion !== 'ALL' && opt.region !== selectedRegion) {
+                if (selectedRegion === 'Global' && opt.region !== 'Global' && opt.region !== 'Device' && opt.region !== 'Latin America' && opt.region !== 'Middle East') {
+                  return false;
+                } else if (selectedRegion !== 'Global') {
+                  return false;
+                }
+              }
+              if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                const matchName = opt.name.toLowerCase().includes(q);
+                const matchCode = opt.label.toLowerCase().includes(q);
+                const matchMarket = opt.market.toLowerCase().includes(q);
+                const matchZone = opt.zone.toLowerCase().includes(q);
+                if (!matchName && !matchCode && !matchMarket && !matchZone) return false;
+              }
+              return true;
+            }).map((opt) => {
               const isSelected = opt.id === selectedTimeZoneId;
               const previewTime = currentTime.toLocaleTimeString('en-US', {
                 timeZone: opt.zone,
@@ -376,7 +511,7 @@ export const ExchangeClockBellModal: React.FC<ExchangeClockBellModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right shrink-0 ml-2">
                     <span className="font-bold text-xs text-[#00e676] font-mono block">
                       {previewTime}
                     </span>

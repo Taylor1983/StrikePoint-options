@@ -138,6 +138,7 @@ import {
   Folder,
   BarChart2,
   GraduationCap,
+  Globe,
 } from 'lucide-react';
 import {
   loadPrivacySettings,
@@ -644,6 +645,7 @@ export default function App() {
       des: `ETF FUNDAMENTALS & COMPANY PROFILE [${selectedTicker.symbol}] <DES>`,
       skew: `VOLATILITY SKEW FINDER & ARBITRAGE SCANNER [${selectedTicker.symbol}] <SKEW>`,
       journal: `STRATEGY TRADE JOURNAL & EXECUTION LEDGER [JRNL]`,
+      educ: `OPTIONS ACADEMY & QUANTITATIVE MASTERCLASS [EDUC]`,
     };
 
     const newId = `pop-${screenToPop}-${Date.now()}`;
@@ -935,6 +937,29 @@ export default function App() {
       setSelectedSymbol('/6C');
       setCurrentScreen('omon');
     } else if (
+      trimmed === 'UTC' ||
+      trimmed === 'GMT' ||
+      trimmed.startsWith('TZ ') ||
+      trimmed.startsWith('TIMEZONE ') ||
+      trimmed.startsWith('SET TZ ') ||
+      trimmed.startsWith('ZONE ')
+    ) {
+      const parts = trimmed.split(/\s+/);
+      const targetCode = parts[parts.length - 1].toLowerCase();
+      const matched = TIME_ZONE_OPTIONS.find(
+        (t) =>
+          t.id.toLowerCase() === targetCode ||
+          t.label.toLowerCase() === targetCode ||
+          t.name.toLowerCase().includes(targetCode) ||
+          t.zone.toLowerCase().includes(targetCode)
+      );
+      if (matched) {
+        handleSelectTimeZone(matched.id);
+        playExecutionChime();
+      } else {
+        setIsClockBellModalOpen(true);
+      }
+    } else if (
       trimmed === 'TIME' ||
       trimmed === 'CLOCK' ||
       trimmed === 'BELL' ||
@@ -1003,6 +1028,21 @@ export default function App() {
       trimmed.includes('JOURNAL')
     ) {
       setCurrentScreen('journal');
+    } else if (
+      trimmed === 'EDUC' ||
+      trimmed === 'EDUCATION' ||
+      trimmed === 'ACADEMY' ||
+      trimmed === 'LEARN' ||
+      trimmed === 'SCHOOL' ||
+      trimmed === 'MASTERCLASS' ||
+      trimmed === 'TUTORIAL' ||
+      trimmed === 'OPTIONS EDUCATION' ||
+      trimmed === 'STRATEGY EDUCATION' ||
+      trimmed.includes('EDUCATION') ||
+      trimmed.includes('ACADEMY') ||
+      trimmed.includes('MASTERCLASS')
+    ) {
+      setCurrentScreen('educ');
     } else if (
       trimmed.includes('DEFCON') ||
       trimmed.includes('DEFCONLEVEL') ||
@@ -1967,6 +2007,30 @@ export default function App() {
         />
       )}
 
+      {/* SCREEN: EDUC (Options Academy, Strategy Risk Profiles, Skews, Event Risk, Greeks & Valuation) */}
+      {screenToRender === 'educ' && (
+        <OptionsEducationView
+          currentTicker={selectedTicker}
+          allTickers={tickers}
+          onStageStrategy={(legs, sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setBuilderLegs(legs);
+            setCurrentScreen('ovme');
+          }}
+          onNavigateToChain={(sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setCurrentScreen('omon');
+          }}
+          onNavigateToRisk={(legs, sym) => {
+            if (tickers[sym]) setSelectedSymbol(sym);
+            setBuilderLegs(legs);
+            setCurrentScreen('risk');
+          }}
+          onNavigateToVolLab={() => setCurrentScreen('vols')}
+          onPopOut={() => handleOpenPopOut('educ')}
+        />
+      )}
+
       {/* SCREEN: EXP (Options Expiration Master Calendar, Term Structure & Settlement Rules) */}
       {screenToRender === 'exp' && (
         <OptionsExpirationView
@@ -2079,7 +2143,7 @@ export default function App() {
       {![
         'omon', 'ovme', 'risk', 'cone', 'scen', 'flow', 'vols', 'chart', 'port',
         'monitor', 'statement', 'hivg', 'surf', 'pcr', 'opec', 'tariff', 'defcon', 'vega',
-        'yc', 'macro', 'div', 'witch', 'bnn', 'exp', 'fts', 'gics', 'gic', 'des', 'skew', 'journal'
+        'yc', 'macro', 'div', 'witch', 'bnn', 'exp', 'fts', 'gics', 'gic', 'des', 'skew', 'journal', 'educ'
       ].includes(screenToRender) && (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
           <img
@@ -2256,18 +2320,88 @@ export default function App() {
             <Sliders className="w-3 h-3" />
           </button>
 
-          {/* Clock Bell */}
+          {/* Quick Time Zone Switcher & Financial Market Clock */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0b101c] border border-[#1e2a40] hover:border-[#ff9900]/50 transition-colors shadow-inner">
+            <button
+              type="button"
+              onClick={() => {
+                playKeyClick();
+                setIsClockBellModalOpen(true);
+              }}
+              className="flex items-center gap-1 text-[10px] font-mono font-bold text-[#ff9900] hover:text-[#ffd600] cursor-pointer transition-colors"
+              title="Click to open Full World Clocks & Exchange Bells Controller <TZ / BELL>"
+            >
+              <Clock className="w-3 h-3 text-[#ff9900]" />
+              <span>{clockTime.est}</span>
+            </button>
+
+            {/* Quick Time Zone Dropdown */}
+            <div className="flex items-center gap-1 pl-1.5 border-l border-[#1e2a40]">
+              <Globe className="w-3 h-3 text-[#00d2ff]" />
+              <select
+                value={timeZoneId}
+                onChange={(e) => {
+                  playKeyClick();
+                  handleSelectTimeZone(e.target.value);
+                }}
+                className="bg-[#101726] text-[#00e676] font-mono font-bold text-[9.5px] border border-[#23334d] hover:border-[#ff9900] rounded px-1 py-0.5 outline-none cursor-pointer tracking-wider"
+                title="Quick Switch Time Zone (ET, CT, PT, UTC, LON, TOK...)"
+              >
+                <optgroup label="North America">
+                  <option value="et">ET · New York / TSX</option>
+                  <option value="ct">CT · Chicago CME</option>
+                  <option value="mt">MT · Denver Mountain</option>
+                  <option value="pt">PT · SF / LA Pacific</option>
+                  <option value="at">AT · Halifax Atlantic</option>
+                </optgroup>
+                <optgroup label="Global & Europe">
+                  <option value="utc">UTC · Coordinated Universal</option>
+                  <option value="lon">LON · London LSE</option>
+                  <option value="fra">CET · Frankfurt XETRA</option>
+                  <option value="par">CET · Paris Euronext</option>
+                  <option value="zur">CHF · Zurich SIX</option>
+                </optgroup>
+                <optgroup label="Asia-Pacific & Middle East">
+                  <option value="tok">JST · Tokyo JPX</option>
+                  <option value="hk">HKT · Hong Kong HKEX</option>
+                  <option value="sg">SGT · Singapore SGX</option>
+                  <option value="mum">IST · Mumbai NSE</option>
+                  <option value="sha">CST · Shanghai SSE</option>
+                  <option value="syd">AEST · Sydney ASX</option>
+                  <option value="dxb">GST · Dubai DFM</option>
+                  <option value="br">BRT · São Paulo B3</option>
+                </optgroup>
+                <optgroup label="System Device">
+                  <option value="local">LOC · Operating System Local</option>
+                </optgroup>
+              </select>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playKeyClick();
+                  setIsClockBellModalOpen(true);
+                }}
+                className="text-[#8c9bb4] hover:text-[#ff9900] p-0.5 ml-0.5 transition-colors cursor-pointer"
+                title="All World Clocks, Sessions & Bells <TZ>"
+              >
+                <Bell className="w-3 h-3 hover:scale-125 transition-transform text-[#ffd600]" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Clock & TZ Button */}
           <button
             type="button"
             onClick={() => {
               playKeyClick();
               setIsClockBellModalOpen(true);
             }}
-            className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#101726] border border-[#1e2a40] text-[10px] font-mono text-[#ff9900] cursor-pointer hover:border-[#ff9900]/50"
-            title="Market Clocks & Exchange Bells"
+            className="sm:hidden flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#101726] border border-[#1e2a40] text-[9.5px] font-mono text-[#ff9900] cursor-pointer"
+            title="Market Clock & Time Zone <TZ>"
           >
             <Clock className="w-3 h-3 text-[#ff9900]" />
-            <span>{clockTime.est}</span>
+            <span>{timeZoneId.toUpperCase()}</span>
           </button>
         </div>
       </div>
@@ -3015,6 +3149,18 @@ export default function App() {
               STRAT JRNL
             </div>
 
+            <div
+              className={`tab ${currentScreen === 'educ' ? 'active text-[#ff9900] font-extrabold shadow-[0_0_8px_rgba(255,153,0,0.3)]' : 'text-[#ff9900] hover:text-white'}`}
+              onClick={() => {
+                playKeyClick();
+                setCurrentScreen('educ');
+              }}
+              title="Options Academy: Interactive Strategy Risk Profiles, Volatility Skews, Event Risk, Greeks & Valuation <EDUC>"
+            >
+              <GraduationCap className="w-3.5 h-3.5 inline-block mr-1 text-[#ff9900]" />
+              ACADEMY
+            </div>
+
             {/* Pop-Out Screen Button */}
             <button
               onClick={() => {
@@ -3236,9 +3382,22 @@ export default function App() {
           )}
         </div>
 
-        <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
-          {clockTime.est || '03:16:26 EST'}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            playKeyClick();
+            setIsClockBellModalOpen(true);
+          }}
+          className="font-bold flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-[#1a2336] transition-all cursor-pointer border border-transparent hover:border-[#ff9900]/40 group"
+          style={{ color: 'var(--accent)' }}
+          title="Click to change terminal Time Zone or ring market bell <TZ>"
+        >
+          <Clock className="w-3 h-3 text-[#ff9900] group-hover:rotate-45 transition-transform" />
+          <span>{clockTime.est || '03:16:26 EST'}</span>
+          <span className="text-[9px] px-1 py-0.2 rounded bg-[#ff9900]/15 text-[#ff9900] border border-[#ff9900]/30 font-mono">
+            {timeZoneId.toUpperCase()}
+          </span>
+        </button>
         <div style={{ color: 'var(--ink-muted)' }}>
           MARKET DATA: REAL-TIME (CBOE BZX)
         </div>
@@ -3261,6 +3420,7 @@ export default function App() {
       <HelpTerminalModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
+        onNavigateToEducation={() => setCurrentScreen('educ')}
       />
 
       {/* Expected Price Move Matrix Modal */}
@@ -3353,6 +3513,11 @@ export default function App() {
         isAutoFitActive={isAutoFitActive}
         onToggleAutoFit={handleToggleAutoFit}
         onOpenPrivacySuite={() => setIsPrivacyModalOpen(true)}
+        timeZoneId={timeZoneId}
+        onSelectTimeZoneId={handleSelectTimeZone}
+        useAmPm={useAmPm}
+        onToggleUseAmPm={handleToggleUseAmPm}
+        onOpenClockBellModal={() => setIsClockBellModalOpen(true)}
       />
 
       {/* Floating Quick Scale & Fit Widget for Mobile / Tablet */}
@@ -3505,6 +3670,8 @@ export default function App() {
         onOpenStrategyExecution={handleOpenStrategyExecution}
         onOpenMarketDepth={() => handleOpenMarketDepth('call')}
         onOpenStockTrade={() => setIsStockTradeOpen(true)}
+        onOpenClockBellModal={() => setIsClockBellModalOpen(true)}
+        timeZoneId={timeZoneId}
       />
 
       {/* Institutional Multi-Market Watchlist Blotter Modal (US & Canadian Markets) */}
